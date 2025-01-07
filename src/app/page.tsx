@@ -7,7 +7,7 @@ import { useProgram, ProgramProvider } from "./utils/programProvider";
 import { WalletProviderWrapper } from "./utils/WalletProvider";
 import { useState, useEffect } from "react";
 import { PublicKey } from "@solana/web3.js";
-import "./styles.css"; // Import the CSS file
+import styles from './style.module.css'; // Import CSS Module
 
 const Home = () => {
   const { publicKey, connected, wallet, connecting } = useWallet();
@@ -149,10 +149,10 @@ const Home = () => {
   };
 
   return (
-    <div className="container">
-      <h1>Plinko Casino</h1>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Plinko Casino</h1>
 
-      <div className="wallet-button">
+      <div className={styles.walletButton}>
         <WalletMultiButton />
       </div>
 
