@@ -1,14 +1,15 @@
 "use client"; // Mark this file as a Client Component
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'; // Import WalletMultiButton
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { BN } from '@project-serum/anchor';
 import { useProgram, ProgramProvider } from './utils/programProvider';
 import { WalletProviderWrapper } from './utils/WalletProvider';
 import { useState, useEffect } from 'react';
+import { PublicKey } from '@solana/web3.js';
 
 const Home = () => {
-  const { publicKey, connected, wallet, connect, connecting } = useWallet(); // Add `connect` and `connecting` for manual connection
+  const { publicKey, connected, wallet, connect, connecting } = useWallet();
   const { program } = useProgram();
   const [balance, setBalance] = useState(0);
   const [betAmount, setBetAmount] = useState('');
@@ -22,15 +23,17 @@ const Home = () => {
     console.log('Wallet connection state - publicKey:', publicKey, 'connected:', connected, 'wallet:', wallet);
   }, [publicKey, connected, wallet]);
 
-  // Manually trigger wallet connection if autoConnect fails
-  useEffect(() => {
-    if (!connected && wallet && !connecting) {
-      console.log('Attempting to manually connect wallet...');
-      connect().catch((error) => {
-        console.error('Failed to connect wallet:', error);
-      });
+  const fetchPlayerAccount = async (playerAccountPDA: any) => {
+    if (!program || !playerAccountPDA) return;
+
+    try {
+      const account = await program.account.playerAccount.fetch(playerAccountPDA);
+      setBalance(account.balance.toNumber());
+      console.log('Player account data:', account);
+    } catch (error) {
+      console.error('Error fetching player account:', error);
     }
-  }, [connected, wallet, connect, connecting]);
+  };
 
   const initializePlayer = async () => {
     if (!publicKey || isInitializing || !program) {
@@ -40,23 +43,31 @@ const Home = () => {
 
     setIsInitializing(true);
     try {
+      const [playerAccountPDA] = await PublicKey.findProgramAddress(
+        [Buffer.from('player_account'), publicKey.toBuffer()],
+        program.programId
+      );
+      console.log('Initializing PlayerAccount PDA:', playerAccountPDA.toBase58());
+
       const tx = await program.methods
-        .initializePlayer(new BN(1000)) // Initial balance
+        .initializePlayer(new BN(1000))
         .accounts({
-          playerAccount: publicKey,
+          playerAccount: playerAccountPDA,
           player: publicKey,
         })
         .rpc();
 
       console.log('Transaction signature:', tx);
       alert('Player account initialized successfully!');
+
+      await fetchPlayerAccount(playerAccountPDA);
     } catch (error) {
       console.error('Error initializing player:', error);
-      alert('Failed to initialize player. Check the console for details.');
     } finally {
       setIsInitializing(false);
     }
   };
+
 
   const placeBet = async () => {
     const amount = parseFloat(betAmount);
@@ -67,19 +78,25 @@ const Home = () => {
 
     setIsPlacingBet(true);
     try {
+      const [playerAccountPDA] = await PublicKey.findProgramAddress(
+        [Buffer.from('player_account'), publicKey.toBuffer()],
+        program.programId
+      );
+
       const tx = await program.methods
         .placeBet(new BN(amount))
         .accounts({
-          playerAccount: publicKey,
+          playerAccount: playerAccountPDA,
           player: publicKey,
         })
         .rpc();
 
       console.log('Transaction signature:', tx);
       alert('Bet placed successfully!');
+
+      await fetchPlayerAccount(playerAccountPDA);
     } catch (error) {
       console.error('Error placing bet:', error);
-      alert('Failed to place bet. Check the console for details.');
     } finally {
       setIsPlacingBet(false);
     }
@@ -93,65 +110,83 @@ const Home = () => {
 
     setIsDeterminingResult(true);
     try {
+      const [playerAccountPDA] = await PublicKey.findProgramAddress(
+        [Buffer.from('player_account'), publicKey.toBuffer()],
+        program.programId
+      );
+
       const tx = await program.methods
-        .determineResult(new BN(1)) // Example result (1 for win, 0 for lose)
+        .determineResult(new BN(1))
         .accounts({
-          playerAccount: publicKey,
+          playerAccount: playerAccountPDA,
           player: publicKey,
         })
         .rpc();
 
       console.log('Transaction signature:', tx);
       alert('Game result determined successfully!');
+
+      await fetchPlayerAccount(playerAccountPDA);
     } catch (error) {
       console.error('Error determining result:', error);
-      alert('Failed to determine result. Check the console for details.');
     } finally {
       setIsDeterminingResult(false);
     }
   };
 
   return (
-    <div>
-      <h1>Plinko Casino</h1>
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
+      <h1 className="text-4xl font-bold mb-8">Plinko Casino</h1>
 
-      {/* Wallet Connect Button */}
-      <div style={{ marginBottom: '20px' }}>
-        <WalletMultiButton />
+      <div className="mb-8">
+        <WalletMultiButton className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" />
       </div>
 
-      {connected ? ( // Only show the app content if the wallet is connected
-        <>
-          <p>Your Balance: {balance}</p>
+      {connected ? (
+        <div className="space-y-6">
+          <p className="text-xl">Your Balance: {balance}</p>
 
-          <button onClick={initializePlayer} disabled={isInitializing || !program}>
+          <button
+            onClick={initializePlayer}
+            disabled={isInitializing || !program}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-green-300"
+          >
             {isInitializing ? 'Initializing...' : 'Initialize Player'}
           </button>
 
-          <div>
+          <div className="flex space-x-4">
             <input
               type="number"
               value={betAmount}
               onChange={(e) => {
-                console.log('Input value:', e.target.value); // Log the input value
-                setBetAmount(e.target.value); // Update the state
+                console.log('Input value:', e.target.value);
+                setBetAmount(e.target.value);
               }}
               placeholder="Bet Amount"
-              min="0" // Ensure the input is non-negative
+              min="0"
+              className="p-2 rounded text-gray-900"
             />
-            <button onClick={placeBet} disabled={isPlacingBet || !program || betAmount === '' || parseFloat(betAmount) <= 0}>
+            <button
+              onClick={placeBet}
+              disabled={isPlacingBet || !program || betAmount === '' || parseFloat(betAmount) <= 0}
+              className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded disabled:bg-yellow-300"
+            >
               {isPlacingBet ? 'Placing Bet...' : 'Place Bet'}
             </button>
           </div>
 
-          <button onClick={determineResult} disabled={isDeterminingResult || !program}>
+          <button
+            onClick={determineResult}
+            disabled={isDeterminingResult || !program}
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:bg-red-300"
+          >
             {isDeterminingResult ? 'Determining Result...' : 'Determine Result'}
           </button>
 
-          {result && <p>Result: {result}</p>}
-        </>
+          {result && <p className="text-xl">Result: {result}</p>}
+        </div>
       ) : (
-        <p>Please connect your wallet to play.</p>
+        <p className="text-xl">Please connect your wallet to play.</p>
       )}
     </div>
   );
@@ -159,9 +194,9 @@ const Home = () => {
 
 export default function Page() {
   return (
-    <WalletProviderWrapper> {/* Wrap with WalletProviderWrapper */}
-      <ProgramProvider> {/* Wrap with ProgramProvider */}
-        <Home /> {/* Render the Home component */}
+    <WalletProviderWrapper>
+      <ProgramProvider>
+        <Home />
       </ProgramProvider>
     </WalletProviderWrapper>
   );
