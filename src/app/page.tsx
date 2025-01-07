@@ -1,18 +1,19 @@
 "use client"; // Mark this file as a Client Component
 
-import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { BN } from '@project-serum/anchor';
-import { useProgram, ProgramProvider } from './utils/programProvider';
-import { WalletProviderWrapper } from './utils/WalletProvider';
-import { useState, useEffect } from 'react';
-import { PublicKey } from '@solana/web3.js';
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { BN } from "@project-serum/anchor";
+import { useProgram, ProgramProvider } from "./utils/programProvider";
+import { WalletProviderWrapper } from "./utils/WalletProvider";
+import { useState, useEffect } from "react";
+import { PublicKey } from "@solana/web3.js";
+import "./styles.css"; // Import the CSS file
 
 const Home = () => {
   const { publicKey, connected, wallet, connecting } = useWallet();
   const { program } = useProgram();
   const [balance, setBalance] = useState(0);
-  const [betAmount, setBetAmount] = useState('');
+  const [betAmount, setBetAmount] = useState("");
   const [result, setResult] = useState(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
@@ -20,8 +21,13 @@ const Home = () => {
 
   // Debug wallet connection
   useEffect(() => {
-    console.log('Wallet connection state:', { publicKey, connected, wallet });
-  }, [publicKey, connected, wallet]);
+    console.log("Wallet connection state:", {
+      publicKey: publicKey?.toBase58(),
+      connected,
+      wallet: wallet?.adapter?.name,
+      connecting,
+    });
+  }, [publicKey, connected, wallet, connecting]);
 
   // Fetch player account data
   const fetchPlayerAccount = async (playerAccountPDA: PublicKey) => {
@@ -30,27 +36,27 @@ const Home = () => {
     try {
       const account = await program.account.playerAccount.fetch(playerAccountPDA);
       setBalance(account.balance.toNumber());
-      console.log('Player account data:', account);
+      console.log("Player account data:", account);
     } catch (error) {
-      console.error('Error fetching player account:', error);
+      console.error("Error fetching player account:", error);
     }
   };
 
   // Initialize player account
   const initializePlayer = async () => {
     if (!publicKey || isInitializing || !program) {
-      alert('Wallet is not connected or program is not available.');
+      alert("Wallet is not connected or program is not available.");
       return;
     }
 
     setIsInitializing(true);
     try {
       const [playerAccountPDA] = await PublicKey.findProgramAddress(
-        [Buffer.from('player_account'), publicKey.toBuffer()],
+        [Buffer.from("player_account"), publicKey.toBuffer()],
         program.programId
       );
 
-      console.log('Initializing PlayerAccount PDA:', playerAccountPDA.toBase58());
+      console.log("Initializing PlayerAccount PDA:", playerAccountPDA.toBase58());
 
       const tx = await program.methods
         .initializePlayer(new BN(1000))
@@ -60,12 +66,12 @@ const Home = () => {
         })
         .rpc();
 
-      console.log('Transaction signature:', tx);
-      alert('Player account initialized successfully!');
+      console.log("Transaction signature:", tx);
+      alert("Player account initialized successfully!");
 
       await fetchPlayerAccount(playerAccountPDA);
     } catch (error) {
-      console.error('Error initializing player:', error);
+      console.error("Error initializing player:", error);
     } finally {
       setIsInitializing(false);
     }
@@ -75,18 +81,18 @@ const Home = () => {
   const placeBet = async () => {
     const amount = parseFloat(betAmount);
     if (!publicKey || amount <= 0 || isPlacingBet || !program) {
-      alert('Please enter a valid bet amount.');
+      alert("Please enter a valid bet amount.");
       return;
     }
 
     setIsPlacingBet(true);
     try {
       const [playerAccountPDA] = await PublicKey.findProgramAddress(
-        [Buffer.from('player_account'), publicKey.toBuffer()],
+        [Buffer.from("player_account"), publicKey.toBuffer()],
         program.programId
       );
 
-      console.log('Placing Bet PlayerAccount PDA:', playerAccountPDA.toBase58());
+      console.log("Placing Bet PlayerAccount PDA:", playerAccountPDA.toBase58());
 
       const tx = await program.methods
         .placeBet(new BN(amount))
@@ -96,12 +102,12 @@ const Home = () => {
         })
         .rpc();
 
-      console.log('Transaction signature:', tx);
-      alert('Bet placed successfully!');
+      console.log("Transaction signature:", tx);
+      alert("Bet placed successfully!");
 
       await fetchPlayerAccount(playerAccountPDA);
     } catch (error) {
-      console.error('Error placing bet:', error);
+      console.error("Error placing bet:", error);
     } finally {
       setIsPlacingBet(false);
     }
@@ -110,18 +116,18 @@ const Home = () => {
   // Determine game result
   const determineResult = async () => {
     if (!publicKey || isDeterminingResult || !program) {
-      alert('Wallet is not connected or program is not available.');
+      alert("Wallet is not connected or program is not available.");
       return;
     }
 
     setIsDeterminingResult(true);
     try {
       const [playerAccountPDA] = await PublicKey.findProgramAddress(
-        [Buffer.from('player_account'), publicKey.toBuffer()],
+        [Buffer.from("player_account"), publicKey.toBuffer()],
         program.programId
       );
 
-      console.log('Determining Result PlayerAccount PDA:', playerAccountPDA.toBase58());
+      console.log("Determining Result PlayerAccount PDA:", playerAccountPDA.toBase58());
 
       const tx = await program.methods
         .determineResult(new BN(1))
@@ -131,67 +137,60 @@ const Home = () => {
         })
         .rpc();
 
-      console.log('Transaction signature:', tx);
-      alert('Game result determined successfully!');
+      console.log("Transaction signature:", tx);
+      alert("Game result determined successfully!");
 
       await fetchPlayerAccount(playerAccountPDA);
     } catch (error) {
-      console.error('Error determining result:', error);
+      console.error("Error determining result:", error);
     } finally {
       setIsDeterminingResult(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
-      <h1 className="text-4xl font-bold mb-8">Plinko Casino</h1>
+    <div className="container">
+      <h1>Plinko Casino</h1>
 
-      <div className="mb-8">
-        <WalletMultiButton /> {/* Removed custom styles */}
+      <div className="wallet-button">
+        <WalletMultiButton />
       </div>
 
       {connected ? (
-        <div className="space-y-6">
-          <p className="text-xl">Your Balance: {balance}</p>
+        <div>
+          <p>Your Balance: {balance}</p>
 
-          <button
-            onClick={initializePlayer}
-            disabled={isInitializing || !program}
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-green-300"
-          >
-            {isInitializing ? 'Initializing...' : 'Initialize Player'}
+          <button onClick={initializePlayer} disabled={isInitializing || !program}>
+            {isInitializing ? "Initializing..." : "Initialize Player"}
           </button>
 
-          <div className="flex space-x-4">
+          <div>
             <input
               type="number"
               value={betAmount}
               onChange={(e) => setBetAmount(e.target.value)}
               placeholder="Bet Amount"
               min="0"
-              className="p-2 rounded text-gray-900"
             />
             <button
               onClick={placeBet}
-              disabled={isPlacingBet || !program || betAmount === '' || parseFloat(betAmount) <= 0}
-              className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded disabled:bg-yellow-300"
+              disabled={isPlacingBet || !program || betAmount === "" || parseFloat(betAmount) <= 0}
             >
-              {isPlacingBet ? 'Placing Bet...' : 'Place Bet'}
+              {isPlacingBet ? "Placing Bet..." : "Place Bet"}
             </button>
           </div>
 
           <button
             onClick={determineResult}
             disabled={isDeterminingResult || !program}
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:bg-red-300"
           >
-            {isDeterminingResult ? 'Determining Result...' : 'Determine Result'}
+            {isDeterminingResult ? "Determining Result..." : "Determine Result"}
           </button>
 
-          {result && <p className="text-xl">Result: {result}</p>}
+          {result && <p>Result: {result}</p>}
         </div>
       ) : (
-        <p className="text-xl">Please connect your wallet to play.</p>
+        <p>Please connect your wallet to play.</p>
       )}
     </div>
   );

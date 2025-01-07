@@ -37,7 +37,7 @@ export const WalletProviderWrapper = ({ children }) => {
   // Supported wallets
   const wallets = useMemo(
     () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
-    []
+    [network] // Add network as a dependency to reinitialize wallets if the network changes
   );
 
   if (!isClient) {
@@ -46,8 +46,10 @@ export const WalletProviderWrapper = ({ children }) => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={true}>
-        <WalletModalProvider>{children}</WalletModalProvider>
+      <WalletProvider wallets={wallets} autoConnect={false}> {/* Disable autoConnect for debugging */}
+        <WalletModalProvider>
+          {children}
+        </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
