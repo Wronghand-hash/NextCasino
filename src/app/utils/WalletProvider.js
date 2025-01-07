@@ -1,8 +1,8 @@
-"use client"
+"use client"; // Mark this file as a Client Component
 
 import { useMemo } from 'react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { WalletProvider } from '@solana/wallet-adapter-react';
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
@@ -22,8 +22,12 @@ export const WalletProviderWrapper = ({ children }) => {
     );
 
     return (
-        <WalletProvider wallets={wallets} autoConnect >
-            <WalletModalProvider>{children} </WalletModalProvider>
-        </WalletProvider>
+        <ConnectionProvider endpoint={endpoint}>
+            <WalletProvider wallets={wallets} autoConnect>
+                <WalletModalProvider>
+                    {children}
+                </WalletModalProvider>
+            </WalletProvider>
+        </ConnectionProvider>
     );
 };
