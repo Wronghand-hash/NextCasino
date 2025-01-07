@@ -5,7 +5,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'; // Import W
 import { BN } from '@project-serum/anchor';
 import { useProgram, ProgramProvider } from './utils/programProvider';
 import { WalletProviderWrapper } from './utils/WalletProvider';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const Home = () => {
   const { publicKey, connected } = useWallet(); // Add `connected` to check wallet connection
@@ -17,8 +17,12 @@ const Home = () => {
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [isDeterminingResult, setIsDeterminingResult] = useState(false);
 
+  useEffect(() => {
+    console.log('Wallet connection state - publicKey:', publicKey, 'connected:', connected);
+  }, [publicKey, connected]);
+
   const initializePlayer = async () => {
-    if (!publicKey || isInitializing) return;
+    if (!publicKey || isInitializing || !program) return;
 
     setIsInitializing(true);
     try {
@@ -34,13 +38,14 @@ const Home = () => {
       alert('Player account initialized successfully!');
     } catch (error) {
       console.error('Error initializing player:', error);
+      alert('Failed to initialize player. Check the console for details.');
     } finally {
       setIsInitializing(false);
     }
   };
 
   const placeBet = async () => {
-    if (!publicKey || betAmount <= 0 || isPlacingBet) {
+    if (!publicKey || betAmount <= 0 || isPlacingBet || !program) {
       alert('Please enter a valid bet amount.');
       return;
     }
@@ -59,13 +64,14 @@ const Home = () => {
       alert('Bet placed successfully!');
     } catch (error) {
       console.error('Error placing bet:', error);
+      alert('Failed to place bet. Check the console for details.');
     } finally {
       setIsPlacingBet(false);
     }
   };
 
   const determineResult = async () => {
-    if (!publicKey || isDeterminingResult) return;
+    if (!publicKey || isDeterminingResult || !program) return;
 
     setIsDeterminingResult(true);
     try {
@@ -81,6 +87,7 @@ const Home = () => {
       alert('Game result determined successfully!');
     } catch (error) {
       console.error('Error determining result:', error);
+      alert('Failed to determine result. Check the console for details.');
     } finally {
       setIsDeterminingResult(false);
     }
@@ -99,7 +106,7 @@ const Home = () => {
         <>
           <p>Your Balance: {balance}</p>
 
-          <button onClick={initializePlayer} disabled={isInitializing}>
+          <button onClick={initializePlayer} disabled={isInitializing || !program}>
             {isInitializing ? 'Initializing...' : 'Initialize Player'}
           </button>
 
@@ -110,12 +117,12 @@ const Home = () => {
               onChange={(e) => setBetAmount(Number(e.target.value))}
               placeholder="Bet Amount"
             />
-            <button onClick={placeBet} disabled={isPlacingBet}>
+            <button onClick={placeBet} disabled={isPlacingBet || !program}>
               {isPlacingBet ? 'Placing Bet...' : 'Place Bet'}
             </button>
           </div>
 
-          <button onClick={determineResult} disabled={isDeterminingResult}>
+          <button onClick={determineResult} disabled={isDeterminingResult || !program}>
             {isDeterminingResult ? 'Determining Result...' : 'Determine Result'}
           </button>
 
@@ -136,4 +143,4 @@ export default function Page() {
       </ProgramProvider>
     </WalletProviderWrapper>
   );
-} 
+}
