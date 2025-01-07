@@ -47,6 +47,10 @@ export const ProgramProvider = ({ children }) => {
   useEffect(() => {
     console.log('ProgramProvider mounted, wallet:', wallet, 'connected:', connected);
     setIsClient(true); // Set isClient to true after mounting
+  }, []);
+
+  useEffect(() => {
+    console.log('useEffect triggered, isClient:', isClient, 'wallet:', wallet, 'connected:', connected);
 
     if (isClient && wallet && connected) {
       try {
@@ -60,6 +64,12 @@ export const ProgramProvider = ({ children }) => {
       } catch (error) {
         console.error('Error creating provider:', error);
       }
+    } else {
+      console.log('Provider not created because:', {
+        isClient,
+        wallet: !!wallet,
+        connected,
+      });
     }
   }, [isClient, connection, wallet, connected]);
 
