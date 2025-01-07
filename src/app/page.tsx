@@ -1,9 +1,8 @@
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useProgram } from '../contexts/ProgramContext';
+import { useWallet, WalletProvider } from '@solana/wallet-adapter-react';
 import { useState } from 'react';
-import { WalletProviderWrapper } from '../components/WalletProvider'; // Import WalletProviderWrapper
-import { ProgramProvider } from '../components/ProgramProvider'; // Import ProgramProvider
 import { anchor } from '@project-serum/anchor'; // Import anchor for BN
+import { useProgram, ProgramProvider } from './utils/programProvider'
+import { WalletProviderWrapper } from './utils/WalletProvider';
 
 const Home = () => {
   const { publicKey } = useWallet();
