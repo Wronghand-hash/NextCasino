@@ -8,7 +8,7 @@ import { WalletProviderWrapper } from './utils/WalletProvider';
 import { useState, useEffect } from 'react';
 
 const Home = () => {
-  const { publicKey, connected } = useWallet(); // Add `connected` to check wallet connection
+  const { publicKey, connected, wallet, connect, connecting } = useWallet(); // Add `connect` and `connecting` for manual connection
   const { program } = useProgram();
   const [balance, setBalance] = useState(0);
   const [betAmount, setBetAmount] = useState(0);
@@ -17,12 +17,26 @@ const Home = () => {
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [isDeterminingResult, setIsDeterminingResult] = useState(false);
 
+  // Debug wallet connection
   useEffect(() => {
-    console.log('Wallet connection state - publicKey:', publicKey, 'connected:', connected);
-  }, [publicKey, connected]);
+    console.log('Wallet connection state - publicKey:', publicKey, 'connected:', connected, 'wallet:', wallet);
+  }, [publicKey, connected, wallet]);
+
+  // Manually trigger wallet connection if autoConnect fails
+  useEffect(() => {
+    if (!connected && wallet && !connecting) {
+      console.log('Attempting to manually connect wallet...');
+      connect().catch((error) => {
+        console.error('Failed to connect wallet:', error);
+      });
+    }
+  }, [connected, wallet, connect, connecting]);
 
   const initializePlayer = async () => {
-    if (!publicKey || isInitializing || !program) return;
+    if (!publicKey || isInitializing || !program) {
+      alert('Wallet is not connected or program is not available.');
+      return;
+    }
 
     setIsInitializing(true);
     try {
@@ -71,7 +85,10 @@ const Home = () => {
   };
 
   const determineResult = async () => {
-    if (!publicKey || isDeterminingResult || !program) return;
+    if (!publicKey || isDeterminingResult || !program) {
+      alert('Wallet is not connected or program is not available.');
+      return;
+    }
 
     setIsDeterminingResult(true);
     try {

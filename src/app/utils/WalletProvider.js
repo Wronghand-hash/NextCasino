@@ -19,6 +19,9 @@ export const WalletProviderWrapper = ({ children }) => {
   const network = WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
+  console.log('Network:', network); // Log the network
+  console.log('Endpoint:', endpoint); // Log the endpoint
+
   // Supported wallets
   const wallets = useMemo(
     () => [
