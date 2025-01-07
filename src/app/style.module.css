@@ -15,7 +15,8 @@
     margin-bottom: 20px;
 }
 
-button {
+/* Scoped button styles */
+.container button {
     background-color: #4caf50;
     color: white;
     border: none;
@@ -26,16 +27,17 @@ button {
     font-size: 1rem;
 }
 
-button:disabled {
+.container button:disabled {
     background-color: #777;
     cursor: not-allowed;
 }
 
-button:hover:not(:disabled) {
+.container button:hover:not(:disabled) {
     background-color: #45a049;
 }
 
-input {
+/* Scoped input styles */
+.container input {
     padding: 10px;
     border: 1px solid #555;
     border-radius: 5px;
@@ -44,11 +46,12 @@ input {
     font-size: 1rem;
 }
 
-input::placeholder {
+.container input::placeholder {
     color: #aaa;
 }
 
-p {
+/* Scoped paragraph styles */
+.container p {
     font-size: 1.2rem;
     margin: 10px 0;
 }
