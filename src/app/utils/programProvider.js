@@ -75,7 +75,54 @@ export const ProgramProvider = ({ children }) => {
     try {
       const programId = new PublicKey(idl.address);
       console.log('Initializing program with ID:', programId.toBase58());
-      return new Program(idl, programId, provider);
+
+      // Create a deep copy of the IDL to avoid mutating the original
+      const fixedIdl = JSON.parse(JSON.stringify(idl));
+
+      // Replace 'pubkey' with 'publicKey' in the IDL
+      const replacePubkeyWithPublicKey = (obj) => {
+        if (typeof obj !== 'object' || obj === null) return;
+
+        for (const key in obj) {
+          if (obj[key] === 'pubkey') {
+            obj[key] = 'publicKey';
+          } else if (typeof obj[key] === 'object') {
+            replacePubkeyWithPublicKey(obj[key]);
+          }
+        }
+      };
+
+      replacePubkeyWithPublicKey(fixedIdl);
+
+      // Ensure the IDL has the required structure
+      fixedIdl.accounts = fixedIdl.accounts || [];
+      fixedIdl.types = fixedIdl.types || [];
+      fixedIdl.instructions = fixedIdl.instructions || [];
+
+      // Ensure each account has a `type` field with a `kind` property
+      fixedIdl.accounts = fixedIdl.accounts.map((account) => {
+        if (!account.type) {
+          account.type = {
+            kind: 'struct',
+            fields: [],
+          };
+        }
+        return account;
+      });
+
+      // Ensure each type has a `kind` property
+      fixedIdl.types = fixedIdl.types.map((type) => {
+        if (!type.type) {
+          type.type = {
+            kind: 'struct',
+            fields: [],
+          };
+        }
+        return type;
+      });
+
+      console.log('Fixed IDL:', fixedIdl);
+      return new Program(fixedIdl, programId, provider);
     } catch (error) {
       console.error('Error initializing program:', error);
       return null;

@@ -6,18 +6,22 @@ import { BN } from "@project-serum/anchor";
 import { useProgram, ProgramProvider } from "./utils/programProvider";
 import { WalletProviderWrapper } from "./utils/WalletProvider";
 import { useState, useEffect } from "react";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Connection } from "@solana/web3.js";
 import styles from './style.module.css'; // Import CSS Module
 
 const Home = () => {
   const { publicKey, connected, wallet, connecting } = useWallet();
   const { program } = useProgram();
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState(0); // In-game balance (lamports)
+  const [walletBalance, setWalletBalance] = useState(0); // Wallet balance (SOL)
   const [betAmount, setBetAmount] = useState("");
   const [result, setResult] = useState(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [isDeterminingResult, setIsDeterminingResult] = useState(false);
+
+  const network = 'https://api.devnet.solana.com'; // Use devnet for testing
+  const connection = new Connection(network, 'confirmed');
 
   // Debug wallet connection
   useEffect(() => {
@@ -44,6 +48,26 @@ const Home = () => {
       setBalance(account.balance.toNumber()); // Ensure balance is being set correctly
     } catch (error) {
       console.error("Error fetching player account:", error);
+    }
+  };
+
+  // Fetch the player's wallet balance
+  const fetchWalletBalance = async () => {
+    if (!publicKey) {
+      console.error('Wallet is not connected');
+      return;
+    }
+
+    try {
+      // Get the balance in lamports
+      const lamportsBalance = await connection.getBalance(publicKey);
+      console.log('Balance in lamports:', lamportsBalance);
+
+      // Convert lamports to SOL
+      const solBalance = lamportsBalance / 1_000_000_000;
+      setWalletBalance(solBalance);
+    } catch (error) {
+      console.error('Error fetching wallet balance:', error);
     }
   };
 
@@ -175,6 +199,15 @@ const Home = () => {
     }
   }, [publicKey, program]);
 
+  // Fetch wallet balance when the wallet is connected or publicKey changes
+  useEffect(() => {
+    if (connected && publicKey) {
+      fetchWalletBalance();
+    } else {
+      setWalletBalance(0); // Reset wallet balance if wallet is disconnected
+    }
+  }, [connected, publicKey]);
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Plinko Casino</h1>
@@ -185,7 +218,8 @@ const Home = () => {
 
       {connected ? (
         <div>
-          <p>Your Balance: {balance / 1e9} SOL</p> {/* Convert lamports to SOL */}
+          <p>Your Wallet Balance: {walletBalance} SOL</p> {/* Wallet balance in SOL */}
+          <p>Your In-Game Balance: {balance / 1e9} SOL</p> {/* In-game balance in SOL */}
 
           <button onClick={initializePlayer} disabled={isInitializing || !program}>
             {isInitializing ? "Initializing..." : "Initialize Player"}
