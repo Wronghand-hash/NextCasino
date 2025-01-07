@@ -47,6 +47,7 @@ export const ProgramProvider = ({ children }) => {
 
     try {
       const adaptedWallet = adaptWallet(wallet);
+      console.log('Creating provider with adapted wallet:', adaptedWallet);
       return new AnchorProvider(connection, adaptedWallet, {
         preflightCommitment: 'processed',
       });
@@ -57,11 +58,24 @@ export const ProgramProvider = ({ children }) => {
   }, [isClient, connection, wallet, connected]);
 
   const program = useMemo(() => {
-    if (!provider || !idl.address) {
-      console.error('Provider or program ID is undefined');
+    if (!provider) {
+      console.error('Provider is undefined');
       return null;
     }
-    return new Program(idl, new PublicKey(idl.address), provider);
+
+    if (!idl.address) {
+      console.error('Program ID is undefined in IDL');
+      return null;
+    }
+
+    try {
+      const programId = new PublicKey(idl.address);
+      console.log('Initializing program with ID:', programId.toBase58());
+      return new Program(idl, programId, provider);
+    } catch (error) {
+      console.error('Error initializing program:', error);
+      return null;
+    }
   }, [provider]);
 
   useEffect(() => {

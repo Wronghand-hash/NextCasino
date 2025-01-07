@@ -23,6 +23,7 @@ const Home = () => {
   useEffect(() => {
     console.log("Wallet connection state:", {
       publicKey: publicKey?.toBase58(),
+      program: program,
       connected,
       wallet: wallet?.adapter?.name,
       connecting,
