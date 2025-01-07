@@ -1,8 +1,10 @@
-import { useWallet, WalletProvider } from '@solana/wallet-adapter-react';
-import { useState } from 'react';
-import { anchor } from '@project-serum/anchor'; // Import anchor for BN
-import { useProgram, ProgramProvider } from './utils/programProvider'
+"use client"
+
+import { useWallet } from '@solana/wallet-adapter-react';
+import { BN } from '@project-serum/anchor';
+import { useProgram, ProgramProvider } from './utils/programProvider';
 import { WalletProviderWrapper } from './utils/WalletProvider';
+import { useState } from 'react';
 
 const Home = () => {
   const { publicKey } = useWallet();
@@ -10,13 +12,17 @@ const Home = () => {
   const [balance, setBalance] = useState(0);
   const [betAmount, setBetAmount] = useState(0);
   const [result, setResult] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [isPlacingBet, setIsPlacingBet] = useState(false);
+  const [isDeterminingResult, setIsDeterminingResult] = useState(false);
 
   const initializePlayer = async () => {
-    if (!publicKey) return;
+    if (!publicKey || isInitializing) return;
 
+    setIsInitializing(true);
     try {
       const tx = await program.methods
-        .initializePlayer(new anchor.BN(1000)) // Initial balance
+        .initializePlayer(new BN(1000)) // Initial balance
         .accounts({
           playerAccount: publicKey,
           player: publicKey,
@@ -27,15 +33,21 @@ const Home = () => {
       alert('Player account initialized successfully!');
     } catch (error) {
       console.error('Error initializing player:', error);
+    } finally {
+      setIsInitializing(false);
     }
   };
 
   const placeBet = async () => {
-    if (!publicKey || betAmount <= 0) return;
+    if (!publicKey || betAmount <= 0 || isPlacingBet) {
+      alert('Please enter a valid bet amount.');
+      return;
+    }
 
+    setIsPlacingBet(true);
     try {
       const tx = await program.methods
-        .placeBet(new anchor.BN(betAmount))
+        .placeBet(new BN(betAmount))
         .accounts({
           playerAccount: publicKey,
           player: publicKey,
@@ -46,15 +58,18 @@ const Home = () => {
       alert('Bet placed successfully!');
     } catch (error) {
       console.error('Error placing bet:', error);
+    } finally {
+      setIsPlacingBet(false);
     }
   };
 
   const determineResult = async () => {
-    if (!publicKey) return;
+    if (!publicKey || isDeterminingResult) return;
 
+    setIsDeterminingResult(true);
     try {
       const tx = await program.methods
-        .determineResult(1) // Example result (1 for win, 0 for lose)
+        .determineResult(new BN(1)) // Example result (1 for win, 0 for lose)
         .accounts({
           playerAccount: publicKey,
           player: publicKey,
@@ -65,6 +80,8 @@ const Home = () => {
       alert('Game result determined successfully!');
     } catch (error) {
       console.error('Error determining result:', error);
+    } finally {
+      setIsDeterminingResult(false);
     }
   };
 
@@ -73,7 +90,9 @@ const Home = () => {
       <h1>Plinko Casino</h1>
       <p>Your Balance: {balance}</p>
 
-      <button onClick={initializePlayer}>Initialize Player</button>
+      <button onClick={initializePlayer} disabled={isInitializing}>
+        {isInitializing ? 'Initializing...' : 'Initialize Player'}
+      </button>
 
       <div>
         <input
@@ -82,10 +101,14 @@ const Home = () => {
           onChange={(e) => setBetAmount(Number(e.target.value))}
           placeholder="Bet Amount"
         />
-        <button onClick={placeBet}>Place Bet</button>
+        <button onClick={placeBet} disabled={isPlacingBet}>
+          {isPlacingBet ? 'Placing Bet...' : 'Place Bet'}
+        </button>
       </div>
 
-      <button onClick={determineResult}>Determine Result</button>
+      <button onClick={determineResult} disabled={isDeterminingResult}>
+        {isDeterminingResult ? 'Determining Result...' : 'Determine Result'}
+      </button>
 
       {result && <p>Result: {result}</p>}
     </div>

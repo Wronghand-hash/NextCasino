@@ -1,3 +1,5 @@
+"use client"
+
 import { useMemo } from 'react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletProvider } from '@solana/wallet-adapter-react';
