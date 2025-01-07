@@ -11,48 +11,38 @@ const ProgramContext = createContext();
 
 // Adapt the wallet object from @solana/wallet-adapter-react to match the Wallet interface expected by @project-serum/anchor
 const adaptWallet = (wallet) => {
-  if (!wallet || !wallet.publicKey) {
-    throw new Error('Wallet is not connected');
+  if (!wallet || !wallet.adapter || !wallet.adapter.publicKey) {
+    throw new Error('Wallet is not connected or adapter is missing');
   }
 
   return {
-    publicKey: wallet.publicKey,
+    publicKey: wallet.adapter.publicKey,
     signTransaction: async (transaction) => {
-      if (!wallet.signTransaction) {
+      if (!wallet.adapter.signTransaction) {
         throw new Error('Wallet does not support signTransaction');
       }
-      return wallet.signTransaction(transaction);
+      return wallet.adapter.signTransaction(transaction);
     },
     signAllTransactions: async (transactions) => {
-      if (!wallet.signAllTransactions) {
+      if (!wallet.adapter.signAllTransactions) {
         throw new Error('Wallet does not support signAllTransactions');
       }
-      return wallet.signAllTransactions(transactions);
+      return wallet.adapter.signAllTransactions(transactions);
     },
   };
 };
 
 export const ProgramProvider = ({ children }) => {
   const { wallet, connected } = useWallet();
-  const [isClient, setIsClient] = useState(false); // Track if the component is mounted
+  const [provider, setProvider] = useState(null);
 
   const network = clusterApiUrl('devnet'); // Use devnet for testing
-  const connection = useMemo(() => {
-    console.log('Creating connection to network:', network);
-    return new Connection(network);
-  }, [network]);
-
-  const [provider, setProvider] = useState(null); // Use state to manage provider
+  const connection = useMemo(() => new Connection(network), [network]);
 
   useEffect(() => {
-    console.log('ProgramProvider mounted, wallet:', wallet, 'connected:', connected);
-    setIsClient(true); // Set isClient to true after mounting
-  }, []);
+    console.log('Wallet state:', { wallet, connected });
 
-  useEffect(() => {
-    console.log('useEffect triggered, isClient:', isClient, 'wallet:', wallet, 'connected:', connected);
-
-    if (isClient && wallet && connected) {
+    if (wallet && connected) {
       try {
         console.log('Adapting wallet:', wallet);
         const adaptedWallet = adaptWallet(wallet);
@@ -60,18 +50,15 @@ export const ProgramProvider = ({ children }) => {
         const newProvider = new AnchorProvider(connection, adaptedWallet, {
           preflightCommitment: 'processed',
         });
-        setProvider(newProvider); // Set provider after mounting
+        setProvider(newProvider);
       } catch (error) {
         console.error('Error creating provider:', error);
       }
     } else {
-      console.log('Provider not created because:', {
-        isClient,
-        wallet: !!wallet,
-        connected,
-      });
+      console.log('Wallet is not connected or adapter is missing');
+      setProvider(null); // Reset provider if wallet is disconnected
     }
-  }, [isClient, connection, wallet, connected]);
+  }, [wallet, connected, connection]);
 
   const program = useMemo(() => {
     if (!provider) {
@@ -79,8 +66,9 @@ export const ProgramProvider = ({ children }) => {
       return null;
     }
 
-    if (!idl.address) {
-      console.error('Program ID is undefined in IDL');
+    // Check if idl.address is defined and is a valid string
+    if (!idl || !idl.address || typeof idl.address !== 'string') {
+      console.error('Program ID is undefined or invalid in IDL:', idl);
       return null;
     }
 
