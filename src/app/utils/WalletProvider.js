@@ -1,34 +1,43 @@
 "use client"; // Mark this file as a Client Component
 
-import { useMemo, useEffect, useState } from 'react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { clusterApiUrl } from '@solana/web3.js';
+import { useMemo, useEffect, useState } from "react";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
+import { clusterApiUrl } from "@solana/web3.js";
 
 export const WalletProviderWrapper = ({ children }) => {
   const [isClient, setIsClient] = useState(false); // Track if the component is mounted
 
   useEffect(() => {
-    console.log('WalletProviderWrapper mounted');
+    if (process.env.NODE_ENV === "development") {
+      console.log("WalletProviderWrapper mounted");
+    }
     setIsClient(true); // Set isClient to true after mounting
   }, []);
 
-  // Use devnet for testing
-  const network = WalletAdapterNetwork.Devnet;
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  // Determine the network (default to Devnet for testing)
+  const network =
+    process.env.NEXT_PUBLIC_SOLANA_NETWORK || WalletAdapterNetwork.Devnet;
 
-  console.log('Network:', network); // Log the network
-  console.log('Endpoint:', endpoint); // Log the endpoint
+  // Define the endpoint
+  const endpoint = useMemo(
+    () =>
+      process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(network),
+    [network]
+  );
+
+  // Log for debugging (development only)
+  if (process.env.NODE_ENV === "development") {
+    console.log("Network:", network);
+    console.log("Endpoint:", endpoint);
+  }
 
   // Supported wallets
   const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-    ],
-    [network]
+    () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
+    []
   );
 
   if (!isClient) {
@@ -38,9 +47,7 @@ export const WalletProviderWrapper = ({ children }) => {
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect={true}>
-        <WalletModalProvider>
-          {children}
-        </WalletModalProvider>
+        <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );

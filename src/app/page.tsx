@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { PublicKey } from '@solana/web3.js';
 
 const Home = () => {
-  const { publicKey, connected, wallet, connect, connecting } = useWallet();
+  const { publicKey, connected, wallet, connecting } = useWallet();
   const { program } = useProgram();
   const [balance, setBalance] = useState(0);
   const [betAmount, setBetAmount] = useState('');
@@ -20,11 +20,12 @@ const Home = () => {
 
   // Debug wallet connection
   useEffect(() => {
-    console.log('Wallet connection state - publicKey:', publicKey, 'connected:', connected, 'wallet:', wallet);
+    console.log('Wallet connection state:', { publicKey, connected, wallet });
   }, [publicKey, connected, wallet]);
 
-  const fetchPlayerAccount = async (playerAccountPDA: any) => {
-    if (!program || !playerAccountPDA) return;
+  // Fetch player account data
+  const fetchPlayerAccount = async (playerAccountPDA: PublicKey) => {
+    if (!program) return;
 
     try {
       const account = await program.account.playerAccount.fetch(playerAccountPDA);
@@ -35,6 +36,7 @@ const Home = () => {
     }
   };
 
+  // Initialize player account
   const initializePlayer = async () => {
     if (!publicKey || isInitializing || !program) {
       alert('Wallet is not connected or program is not available.');
@@ -47,6 +49,7 @@ const Home = () => {
         [Buffer.from('player_account'), publicKey.toBuffer()],
         program.programId
       );
+
       console.log('Initializing PlayerAccount PDA:', playerAccountPDA.toBase58());
 
       const tx = await program.methods
@@ -68,7 +71,7 @@ const Home = () => {
     }
   };
 
-
+  // Place a bet
   const placeBet = async () => {
     const amount = parseFloat(betAmount);
     if (!publicKey || amount <= 0 || isPlacingBet || !program) {
@@ -82,6 +85,8 @@ const Home = () => {
         [Buffer.from('player_account'), publicKey.toBuffer()],
         program.programId
       );
+
+      console.log('Placing Bet PlayerAccount PDA:', playerAccountPDA.toBase58());
 
       const tx = await program.methods
         .placeBet(new BN(amount))
@@ -102,6 +107,7 @@ const Home = () => {
     }
   };
 
+  // Determine game result
   const determineResult = async () => {
     if (!publicKey || isDeterminingResult || !program) {
       alert('Wallet is not connected or program is not available.');
@@ -114,6 +120,8 @@ const Home = () => {
         [Buffer.from('player_account'), publicKey.toBuffer()],
         program.programId
       );
+
+      console.log('Determining Result PlayerAccount PDA:', playerAccountPDA.toBase58());
 
       const tx = await program.methods
         .determineResult(new BN(1))
@@ -139,7 +147,9 @@ const Home = () => {
       <h1 className="text-4xl font-bold mb-8">Plinko Casino</h1>
 
       <div className="mb-8">
-        <WalletMultiButton className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" />
+        <div className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          <WalletMultiButton style={{ all: 'unset', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+        </div>
       </div>
 
       {connected ? (
@@ -158,10 +168,7 @@ const Home = () => {
             <input
               type="number"
               value={betAmount}
-              onChange={(e) => {
-                console.log('Input value:', e.target.value);
-                setBetAmount(e.target.value);
-              }}
+              onChange={(e) => setBetAmount(e.target.value)}
               placeholder="Bet Amount"
               min="0"
               className="p-2 rounded text-gray-900"
