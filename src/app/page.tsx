@@ -11,7 +11,7 @@ const Home = () => {
   const { publicKey, connected, wallet, connect, connecting } = useWallet(); // Add `connect` and `connecting` for manual connection
   const { program } = useProgram();
   const [balance, setBalance] = useState(0);
-  const [betAmount, setBetAmount] = useState(0);
+  const [betAmount, setBetAmount] = useState('');
   const [result, setResult] = useState(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
@@ -59,7 +59,8 @@ const Home = () => {
   };
 
   const placeBet = async () => {
-    if (!publicKey || betAmount <= 0 || isPlacingBet || !program) {
+    const amount = parseFloat(betAmount);
+    if (!publicKey || amount <= 0 || isPlacingBet || !program) {
       alert('Please enter a valid bet amount.');
       return;
     }
@@ -67,7 +68,7 @@ const Home = () => {
     setIsPlacingBet(true);
     try {
       const tx = await program.methods
-        .placeBet(new BN(betAmount))
+        .placeBet(new BN(amount))
         .accounts({
           playerAccount: publicKey,
           player: publicKey,
@@ -131,10 +132,14 @@ const Home = () => {
             <input
               type="number"
               value={betAmount}
-              onChange={(e) => setBetAmount(Number(e.target.value))}
+              onChange={(e) => {
+                console.log('Input value:', e.target.value); // Log the input value
+                setBetAmount(e.target.value); // Update the state
+              }}
               placeholder="Bet Amount"
+              min="0" // Ensure the input is non-negative
             />
-            <button onClick={placeBet} disabled={isPlacingBet || !program}>
+            <button onClick={placeBet} disabled={isPlacingBet || !program || betAmount === '' || parseFloat(betAmount) <= 0}>
               {isPlacingBet ? 'Placing Bet...' : 'Place Bet'}
             </button>
           </div>
