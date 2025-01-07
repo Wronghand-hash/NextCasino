@@ -31,12 +31,16 @@ const Home = () => {
 
   // Fetch player account data
   const fetchPlayerAccount = async (playerAccountPDA: PublicKey) => {
-    if (!program) return;
+    if (!program) {
+      console.error("Program is not defined.");
+      return;
+    }
 
     try {
+      console.log("Fetching player account data for PDA:", playerAccountPDA.toBase58());
       const account = await program.account.playerAccount.fetch(playerAccountPDA);
-      setBalance(account.balance.toNumber());
       console.log("Player account data:", account);
+      setBalance(account.balance.toNumber()); // Ensure balance is being set correctly
     } catch (error) {
       console.error("Error fetching player account:", error);
     }
@@ -59,7 +63,7 @@ const Home = () => {
       console.log("Initializing PlayerAccount PDA:", playerAccountPDA.toBase58());
 
       const tx = await program.methods
-        .initializePlayer(new BN(1000))
+        .initializePlayer(new BN(1000)) // Initialize with 1000 lamports (0.000001 SOL)
         .accounts({
           playerAccount: playerAccountPDA,
           player: publicKey,
@@ -95,7 +99,7 @@ const Home = () => {
       console.log("Placing Bet PlayerAccount PDA:", playerAccountPDA.toBase58());
 
       const tx = await program.methods
-        .placeBet(new BN(amount))
+        .placeBet(new BN(amount * 1e9)) // Convert SOL to lamports (1 SOL = 1e9 lamports)
         .accounts({
           playerAccount: playerAccountPDA,
           player: publicKey,
@@ -130,7 +134,7 @@ const Home = () => {
       console.log("Determining Result PlayerAccount PDA:", playerAccountPDA.toBase58());
 
       const tx = await program.methods
-        .determineResult(new BN(1))
+        .determineResult(new BN(1)) // Example: Pass a value to determine the result
         .accounts({
           playerAccount: playerAccountPDA,
           player: publicKey,
@@ -148,6 +152,28 @@ const Home = () => {
     }
   };
 
+  // Fetch player account on mount or when publicKey changes
+  useEffect(() => {
+    if (publicKey && program) {
+      console.log("PublicKey and program are available. Fetching player account...");
+      const fetchData = async () => {
+        try {
+          const [playerAccountPDA] = await PublicKey.findProgramAddress(
+            [Buffer.from("player_account"), publicKey.toBuffer()],
+            program.programId
+          );
+          console.log("PlayerAccount PDA:", playerAccountPDA.toBase58());
+          await fetchPlayerAccount(playerAccountPDA);
+        } catch (error) {
+          console.error("Error deriving playerAccountPDA:", error);
+        }
+      };
+      fetchData();
+    } else {
+      console.log("PublicKey or program is not available.");
+    }
+  }, [publicKey, program]);
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Plinko Casino</h1>
@@ -158,7 +184,7 @@ const Home = () => {
 
       {connected ? (
         <div>
-          <p>Your Balance: {balance}</p>
+          <p>Your Balance: {balance / 1e9} SOL</p> {/* Convert lamports to SOL */}
 
           <button onClick={initializePlayer} disabled={isInitializing || !program}>
             {isInitializing ? "Initializing..." : "Initialize Player"}
