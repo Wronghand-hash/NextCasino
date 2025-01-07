@@ -37,23 +37,29 @@ export const ProgramProvider = ({ children }) => {
   const [isClient, setIsClient] = useState(false); // Track if the component is mounted
 
   const network = clusterApiUrl('devnet'); // Use devnet for testing
-  const connection = useMemo(() => new Connection(network), [network]);
+  const connection = useMemo(() => {
+    console.log('Creating connection to network:', network);
+    return new Connection(network);
+  }, [network]);
 
-  const provider = useMemo(() => {
-    if (!isClient || !wallet || !connected) {
-      console.error('Wallet is not connected or component is not mounted');
-      return null;
-    }
+  const [provider, setProvider] = useState(null); // Use state to manage provider
 
-    try {
-      const adaptedWallet = adaptWallet(wallet);
-      console.log('Creating provider with adapted wallet:', adaptedWallet);
-      return new AnchorProvider(connection, adaptedWallet, {
-        preflightCommitment: 'processed',
-      });
-    } catch (error) {
-      console.error('Error creating provider:', error);
-      return null;
+  useEffect(() => {
+    console.log('ProgramProvider mounted, wallet:', wallet, 'connected:', connected);
+    setIsClient(true); // Set isClient to true after mounting
+
+    if (isClient && wallet && connected) {
+      try {
+        console.log('Adapting wallet:', wallet);
+        const adaptedWallet = adaptWallet(wallet);
+        console.log('Creating provider with adapted wallet:', adaptedWallet);
+        const newProvider = new AnchorProvider(connection, adaptedWallet, {
+          preflightCommitment: 'processed',
+        });
+        setProvider(newProvider); // Set provider after mounting
+      } catch (error) {
+        console.error('Error creating provider:', error);
+      }
     }
   }, [isClient, connection, wallet, connected]);
 
@@ -77,11 +83,6 @@ export const ProgramProvider = ({ children }) => {
       return null;
     }
   }, [provider]);
-
-  useEffect(() => {
-    console.log('ProgramProvider mounted, wallet:', wallet, 'connected:', connected);
-    setIsClient(true); // Set isClient to true after mounting
-  }, [wallet, connected]);
 
   return (
     <ProgramContext.Provider value={{ program }}>
