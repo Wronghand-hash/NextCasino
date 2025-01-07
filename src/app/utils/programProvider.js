@@ -9,33 +9,34 @@ const idl = require('./casino_plinko.json'); // Ensure the path is correct
 const ProgramContext = createContext();
 
 export const ProgramProvider = ({ children }) => {
-  const { wallet } = useWallet();
+  const { wallet, connected } = useWallet();
   const [isClient, setIsClient] = useState(false); // Track if the component is mounted
-
-  useEffect(() => {
-    setIsClient(true); // Set isClient to true after mounting
-  }, []);
 
   const network = clusterApiUrl('devnet'); // Use devnet for testing
   const connection = useMemo(() => new Connection(network), [network]);
 
   const provider = useMemo(() => {
-    if (!isClient || !wallet || !connection) {
-      console.error('Wallet or connection is undefined');
+    if (!isClient || !wallet || !connection || !connected) {
+      console.error('Wallet or connection is undefined or not connected', 'wallet', wallet, 'connection', connection, 'connected', connected);
       return null;
     }
     return new AnchorProvider(connection, wallet, {
       preflightCommitment: 'processed',
     });
-  }, [isClient, connection, wallet]);
+  }, [isClient, connection, wallet, connected]);
 
   const program = useMemo(() => {
     if (!provider || !idl.address) {
-      console.error('Provider or program ID is undefined');
+      console.error('Provider or program ID is undefined', 'provider', provider, 'idl ', idl.address);
       return null;
     }
     return new Program(idl, idl.address, provider);
   }, [provider]);
+
+  useEffect(() => {
+    console.log('ProgramProvider mounted, wallet:', wallet, 'connected:', connected);
+    setIsClient(true); // Set isClient to true after mounting
+  }, [wallet, connected]);
 
   return (
     <ProgramContext.Provider value={{ program }}>

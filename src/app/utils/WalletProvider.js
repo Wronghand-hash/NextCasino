@@ -11,6 +11,7 @@ export const WalletProviderWrapper = ({ children }) => {
   const [isClient, setIsClient] = useState(false); // Track if the component is mounted
 
   useEffect(() => {
+    console.log('WalletProviderWrapper mounted');
     setIsClient(true); // Set isClient to true after mounting
   }, []);
 
@@ -33,7 +34,7 @@ export const WalletProviderWrapper = ({ children }) => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets} autoConnect={false}>
         <WalletModalProvider>
           {children}
         </WalletModalProvider>
