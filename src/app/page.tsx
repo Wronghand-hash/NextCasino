@@ -6,7 +6,7 @@ import { BN } from "@project-serum/anchor";
 import { useProgram, ProgramProvider } from "./utils/programProvider";
 import { WalletProviderWrapper } from "./utils/WalletProvider";
 import { useState, useEffect } from "react";
-import { PublicKey, Connection } from "@solana/web3.js";
+import { PublicKey, Connection, SystemProgram } from "@solana/web3.js"; // Import SystemProgram
 import styles from './style.module.css'; // Import CSS Module
 
 const Home = () => {
@@ -80,24 +80,40 @@ const Home = () => {
 
     setIsInitializing(true);
     try {
+      // Debug: Log the publicKey and program ID
+      console.log("Public Key:", publicKey.toBase58());
+      console.log("Program ID:", program.programId.toBase58());
+
+      // Derive the playerAccount PDA
       const [playerAccountPDA] = await PublicKey.findProgramAddress(
         [Buffer.from("player_account"), publicKey.toBuffer()],
         program.programId
       );
 
-      console.log("Initializing PlayerAccount PDA:", playerAccountPDA.toBase58());
+      // Debug: Log the derived PDA
+      console.log("PlayerAccount PDA:", playerAccountPDA.toBase58());
 
+      // Debug: Log the accounts being passed to the instruction
+      console.log("Accounts being passed:", {
+        playerAccount: playerAccountPDA.toBase58(),
+        player: publicKey.toBase58(),
+        systemProgram: SystemProgram.programId.toBase58(),
+      });
+
+      // Call the initializePlayer method on the Anchor program
       const tx = await program.methods
         .initializePlayer(new BN(1000)) // Initialize with 1000 lamports (0.000001 SOL)
         .accounts({
-          playerAccount: playerAccountPDA,
-          player: publicKey,
+          playerAccount: playerAccountPDA, // Pass the PDA as the playerAccount
+          player: publicKey, // Pass the player's public key
+          systemProgram: SystemProgram.programId, // Include the system program
         })
         .rpc();
 
       console.log("Transaction signature:", tx);
       alert("Player account initialized successfully!");
 
+      // Fetch the updated player account data
       await fetchPlayerAccount(playerAccountPDA);
     } catch (error) {
       console.error("Error initializing player:", error);
@@ -105,7 +121,6 @@ const Home = () => {
       setIsInitializing(false);
     }
   };
-
   // Place a bet
   const placeBet = async () => {
     const amount = parseFloat(betAmount);
