@@ -147,9 +147,7 @@ const Home = () => {
       <h1 className="text-4xl font-bold mb-8">Plinko Casino</h1>
 
       <div className="mb-8">
-        <div className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          <WalletMultiButton style={{ all: 'unset', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
-        </div>
+        <WalletMultiButton /> {/* Removed custom styles */}
       </div>
 
       {connected ? (
