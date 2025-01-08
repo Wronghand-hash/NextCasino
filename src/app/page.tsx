@@ -80,9 +80,10 @@ const Home = () => {
 
     setIsInitializing(true);
     try {
-      // Debug: Log the publicKey and program ID
+      // Debug: Log the publicKey, program ID, and cluster
       console.log("Public Key:", publicKey.toBase58());
       console.log("Program ID:", program.programId.toBase58());
+      console.log("Cluster:", program.provider.connection._rpcEndpoint);
 
       // Derive the playerAccount PDA
       const [playerAccountPDA] = await PublicKey.findProgramAddress(
@@ -93,7 +94,7 @@ const Home = () => {
       // Debug: Log the derived PDA
       console.log("PlayerAccount PDA:", playerAccountPDA.toBase58());
 
-      // Debug: Log the accounts being passed to the instruction
+      // Debug: Log the accounts being passed
       console.log("Accounts being passed:", {
         player_account: playerAccountPDA.toBase58(),
         player: publicKey.toBase58(),
@@ -108,7 +109,11 @@ const Home = () => {
           player: publicKey, // Pass the player's public key
           system_program: SystemProgram.programId, // Include the system program
         })
-        .rpc();
+        .rpc()
+        .catch((error: any) => {
+          console.error("Transaction error:", error);
+          throw error;
+        });
 
       console.log("Transaction signature:", tx);
       alert("Player account initialized successfully!");
@@ -117,6 +122,7 @@ const Home = () => {
       await fetchPlayerAccount(playerAccountPDA);
     } catch (error) {
       console.error("Error initializing player:", error);
+      alert("Failed to initialize player account. Check the console for details.");
     } finally {
       setIsInitializing(false);
     }
