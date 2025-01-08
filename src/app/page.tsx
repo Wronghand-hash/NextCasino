@@ -95,18 +95,18 @@ const Home = () => {
 
       // Debug: Log the accounts being passed to the instruction
       console.log("Accounts being passed:", {
-        playerAccount: playerAccountPDA.toBase58(),
+        player_account: playerAccountPDA.toBase58(),
         player: publicKey.toBase58(),
-        systemProgram: SystemProgram.programId.toBase58(),
+        system_program: SystemProgram.programId.toBase58(),
       });
 
       // Call the initializePlayer method on the Anchor program
       const tx = await program.methods
         .initializePlayer(new BN(1000)) // Initialize with 1000 lamports (0.000001 SOL)
         .accounts({
-          playerAccount: playerAccountPDA, // Pass the PDA as the playerAccount
+          player_account: playerAccountPDA, // Use `player_account` (matches Anchor program)
           player: publicKey, // Pass the player's public key
-          systemProgram: SystemProgram.programId, // Include the system program
+          system_program: SystemProgram.programId, // Include the system program
         })
         .rpc();
 
