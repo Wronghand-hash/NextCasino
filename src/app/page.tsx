@@ -6,7 +6,7 @@ import { BN } from "@project-serum/anchor";
 import { useProgram, ProgramProvider } from "./utils/programProvider";
 import { WalletProviderWrapper } from "./utils/WalletProvider";
 import { useState, useEffect } from "react";
-import { PublicKey, Connection, SystemProgram } from "@solana/web3.js"; // Import SystemProgram
+import { PublicKey, Connection, SystemProgram, Transaction } from "@solana/web3.js"; // Import SystemProgram
 import styles from './style.module.css'; // Import CSS Module
 
 const Home = () => {
@@ -108,19 +108,21 @@ const Home = () => {
         throw new Error("One or more required accounts are undefined.");
       }
 
-      // Call the initializePlayer method on the Anchor program
-      const tx = await program.methods
+      // Create the instruction
+      const instruction = await program.methods
         .initializePlayer(new BN(1000)) // Initialize with 1000 lamports (0.000001 SOL)
         .accounts({
           player_account: playerAccountPDA, // Use `player_account` (matches Anchor program)
           player: publicKey, // Pass the player's public key
           system_program: SystemProgram.programId, // Include the system program
         })
-        .rpc()
-        .catch((error: any) => {
-          console.error("Transaction error:", error);
-          throw error;
-        });
+        .instruction();
+
+      // Create a transaction and add the instruction
+      const transaction = new Transaction().add(instruction);
+
+      // Send and confirm the transaction
+      const tx = await program.provider.sendAndConfirm(transaction);
 
       console.log("Transaction signature:", tx);
       alert("Player account initialized successfully!");
