@@ -73,6 +73,7 @@ const Home = () => {
 
   // Initialize player account
   const initializePlayer = async () => {
+    // Check if the wallet is connected and the program is available
     if (!publicKey || isInitializing || !program) {
       alert("Wallet is not connected or program is not available.");
       return;
@@ -86,13 +87,14 @@ const Home = () => {
       console.log("Cluster:", program.provider.connection._rpcEndpoint);
 
       // Derive the playerAccount PDA
-      const [playerAccountPDA] = await PublicKey.findProgramAddress(
+      const [playerAccountPDA, playerAccountBump] = await PublicKey.findProgramAddress(
         [Buffer.from("player_account"), publicKey.toBuffer()],
         program.programId
       );
 
-      // Debug: Log the derived PDA
+      // Debug: Log the derived PDA and bump
       console.log("PlayerAccount PDA:", playerAccountPDA.toBase58());
+      console.log("PlayerAccount Bump:", playerAccountBump);
 
       // Debug: Log the accounts being passed
       console.log("Accounts being passed:", {
@@ -100,6 +102,11 @@ const Home = () => {
         player: publicKey.toBase58(),
         system_program: SystemProgram.programId.toBase58(),
       });
+
+      // Ensure all required accounts are defined
+      if (!playerAccountPDA || !publicKey || !SystemProgram.programId) {
+        throw new Error("One or more required accounts are undefined.");
+      }
 
       // Call the initializePlayer method on the Anchor program
       const tx = await program.methods
@@ -127,6 +134,7 @@ const Home = () => {
       setIsInitializing(false);
     }
   };
+
   // Place a bet
   const placeBet = async () => {
     const amount = parseFloat(betAmount);
