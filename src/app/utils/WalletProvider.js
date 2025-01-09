@@ -46,7 +46,7 @@ export const WalletProviderWrapper = ({ children }) => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={false}> {/* Disable autoConnect for debugging */}
+      <WalletProvider wallets={wallets} autoConnect={true}> {/* Disable autoConnect for debugging */}
         <WalletModalProvider>
           {children}
         </WalletModalProvider>

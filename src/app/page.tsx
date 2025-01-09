@@ -72,8 +72,8 @@ const Home = () => {
   };
 
   // Initialize player account
+
   const initializePlayer = async () => {
-    // Check if the wallet is connected and the program is available
     if (!publicKey || isInitializing || !program) {
       alert("Wallet is not connected or program is not available.");
       return;
@@ -81,61 +81,40 @@ const Home = () => {
 
     setIsInitializing(true);
     try {
-      // Debug: Log the publicKey, program ID, and cluster
-      console.log("Public Key:", publicKey.toBase58());
-      console.log("Program ID:", program.programId.toBase58());
-      console.log("Cluster:", program.provider.connection._rpcEndpoint);
-
-      // Derive the playerAccount PDA
-      const [playerAccountPDA, playerAccountBump] = await PublicKey.findProgramAddress(
+      // Derive the PDA for the player's account using findProgramAddressSync
+      const [playerAccountPDA] = PublicKey.findProgramAddressSync(
         [Buffer.from("player_account"), publicKey.toBuffer()],
         program.programId
       );
 
-      // Debug: Log the derived PDA and bump
+      console.log("Derived Accounts:");
       console.log("PlayerAccount PDA:", playerAccountPDA.toBase58());
-      console.log("PlayerAccount Bump:", playerAccountBump);
+      console.log("Player Public Key:", publicKey.toBase58());
+      console.log("System Program ID:", SystemProgram.programId.toBase58());
 
-      // Debug: Log the accounts being passed
-      console.log("Accounts being passed:", {
-        player_account: playerAccountPDA.toBase58(),
-        player: publicKey.toBase58(),
-        system_program: SystemProgram.programId.toBase58(),
-      });
-
-      // Ensure all required accounts are defined
-      if (!playerAccountPDA || !publicKey || !SystemProgram.programId) {
-        throw new Error("One or more required accounts are undefined.");
-      }
-
-      // Create the instruction
-      const instruction = await program.methods
-        .initializePlayer(new BN(1000)) // Initialize with 1000 lamports (0.000001 SOL)
+      // Call the Anchor program's initializePlayer method
+      const tx = await program.methods
+        .initializePlayer(new BN(1000)) // Initialize with 1000 lamports
         .accounts({
-          player_account: playerAccountPDA, // Use `player_account` (matches Anchor program)
-          player: publicKey, // Pass the player's public key
-          system_program: SystemProgram.programId, // Include the system program
+          player_account: playerAccountPDA, // The player's account PDA
+          player: publicKey, // The player's public key
+          system_program: SystemProgram.programId, // System program
         })
-        .instruction();
+        .rpc();
 
-      // Create a transaction and add the instruction
-      const transaction = new Transaction().add(instruction);
-
-      // Send and confirm the transaction
-      const tx = await program.provider.sendAndConfirm(transaction);
-
-      console.log("Transaction signature:", tx);
+      console.log("Transaction successful. Signature:", tx);
       alert("Player account initialized successfully!");
 
-      // Fetch the updated player account data
+      // Optionally fetch and update the player's account state
       await fetchPlayerAccount(playerAccountPDA);
     } catch (error) {
       console.error("Error initializing player:", error);
-      alert("Failed to initialize player account. Check the console for details.");
     } finally {
       setIsInitializing(false);
     }
   };
+
+
 
   // Place a bet
   const placeBet = async () => {
