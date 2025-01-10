@@ -71,15 +71,15 @@ const useProgramSetup = () => {
       return;
     }
 
-    if (!idl || !idl.address) {
-      console.error("IDL or program address is missing");
+    if (!idl || !idl.address || !idl.kind) { // Check if idl and its properties are defined
+      console.error("IDL or program address is missing or invalid");
       setProgram(null);
       return;
     }
 
     try {
       const programId = new PublicKey(idl.address);
-      const newProgram = new Program(idl as unknown as Idl, programId, provider);
+      const newProgram = new Program(idl as unknown as Idl, programId.toBase58(), provider);
       setProgram(newProgram);
     } catch (error) {
       console.error("Error initializing program:", error instanceof Error ? error.message : "Unknown error");
@@ -102,7 +102,7 @@ export const ProgramProvider = ({ children }: ProgramProviderProps) => {
   const contextValue = useMemo(() => ({ program }), [program]);
 
   return (
-    <ProgramContext.Provider value={contextValue} >
+    <ProgramContext.Provider value={contextValue}>
       {children}
     </ProgramContext.Provider>
   );
