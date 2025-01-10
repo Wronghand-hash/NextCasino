@@ -3,19 +3,19 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { BN } from "@project-serum/anchor";
-import { useProgram, ProgramProvider } from "./utils/programProvider";
-import { WalletProviderWrapper } from "./utils/WalletProvider";
+import { ProgramProvider, useProgram } from "./utils/programProvider"; // Import useProgram
+import { WalletProviderWrapper } from "./utils/WalletProvider"; // Import WalletProviderWrapper
 import { useState, useEffect } from "react";
 import { PublicKey, Connection, SystemProgram, Transaction } from "@solana/web3.js"; // Import SystemProgram
 import styles from './style.module.css'; // Import CSS Module
 
 const Home = () => {
   const { publicKey, connected, wallet, connecting } = useWallet();
-  const { program } = useProgram();
+  const { program } = useProgram(); // Use the useProgram hook
   const [balance, setBalance] = useState(0); // In-game balance (lamports)
   const [walletBalance, setWalletBalance] = useState(0); // Wallet balance (SOL)
   const [betAmount, setBetAmount] = useState("");
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [isDeterminingResult, setIsDeterminingResult] = useState(false);
@@ -72,7 +72,6 @@ const Home = () => {
   };
 
   // Initialize player account
-
   const initializePlayer = async () => {
     if (!publicKey || isInitializing || !program) {
       alert("Wallet is not connected or program is not available.");
@@ -113,8 +112,6 @@ const Home = () => {
       setIsInitializing(false);
     }
   };
-
-
 
   // Place a bet
   const placeBet = async () => {

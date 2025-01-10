@@ -1,13 +1,17 @@
 "use client"; // Mark this file as a Client Component
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, ReactNode } from "react";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
-import { clusterApiUrl } from "@solana/web3.js";
+import { clusterApiUrl, Cluster } from "@solana/web3.js";
 
-export const WalletProviderWrapper = ({ children }) => {
+interface WalletProviderWrapperProps {
+  children: ReactNode; // Define the type for the `children` prop
+}
+
+export const WalletProviderWrapper = ({ children }: WalletProviderWrapperProps) => {
   const [isClient, setIsClient] = useState(false); // Track if the component is mounted
 
   useEffect(() => {
@@ -18,8 +22,9 @@ export const WalletProviderWrapper = ({ children }) => {
   }, []);
 
   // Determine the network (default to Devnet for testing)
-  const network =
-    process.env.NEXT_PUBLIC_SOLANA_NETWORK || WalletAdapterNetwork.Devnet;
+  const network = (
+    process.env.NEXT_PUBLIC_SOLANA_NETWORK || WalletAdapterNetwork.Devnet
+  ) as Cluster; // Cast to Cluster type
 
   // Define the endpoint
   const endpoint = useMemo(
