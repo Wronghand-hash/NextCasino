@@ -71,15 +71,16 @@ const useProgramSetup = () => {
       return;
     }
 
-    if (!idl || !idl.address || !idl.kind) { // Check if idl and its properties are defined
-      console.error("IDL or program address is missing or invalid");
+    // Ensure the IDL is correctly loaded and has the required properties
+    if (!idl || !idl.metadata || !idl.address) {
+      console.error("IDL is missing required properties:", idl);
       setProgram(null);
       return;
     }
 
     try {
       const programId = new PublicKey(idl.address);
-      const newProgram = new Program(idl as unknown as Idl, programId.toBase58(), provider);
+      const newProgram = new Program(idl as unknown as Idl, programId, provider);
       setProgram(newProgram);
     } catch (error) {
       console.error("Error initializing program:", error instanceof Error ? error.message : "Unknown error");
