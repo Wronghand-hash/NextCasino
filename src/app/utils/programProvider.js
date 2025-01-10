@@ -9,7 +9,7 @@ import idl from "./casino_plinko.json"; // Ensure the path is correct
 const ProgramContext = createContext();
 
 const adaptWallet = (wallet) => {
-  if (!wallet || !wallet.adapter || !wallet.adapter.publicKey) {
+  if (!wallet || !wallet.adapter) {
     throw new Error("Wallet is not connected or adapter is missing");
   }
 
@@ -25,7 +25,7 @@ export const ProgramProvider = ({ children }) => {
   const [provider, setProvider] = useState(null);
 
   const network = clusterApiUrl("devnet"); // Use devnet for testing
-  const connection = useMemo(() => new Connection(network), [network]);
+  const connection = useMemo(() => new Connection(network, "processed"), [network]);
 
   useEffect(() => {
     if (wallet && connected) {
@@ -45,24 +45,23 @@ export const ProgramProvider = ({ children }) => {
   }, [wallet, connected, connection]);
 
   const program = useMemo(() => {
-    if (!provider || !idl || !idl.address) {
-      console.error("Provider, IDL, or program address is missing");
+    if (!provider) {
+      console.warn("Provider is not set yet");
+      return null;
+    }
+
+    if (!idl || !idl.address) {
+      console.error("IDL or program address is missing");
       return null;
     }
 
     try {
-      console.log(idl.address)
       const programId = new PublicKey(idl.address);
 
-      // Validate IDL structure
-      if (!idl.instructions || !Array.isArray(idl.instructions)) {
-        throw new Error("IDL missing or invalid 'instructions' field");
-      }
-      if (!idl.accounts || !Array.isArray(idl.accounts)) {
-        throw new Error("IDL missing or invalid 'accounts' field");
-      }
-
-      console.log('idl:', idl, "\n program id :", programId, "\n provider:", provider)
+      // Log for debugging
+      console.log("IDL Address:", idl.address);
+      console.log("Program ID:", programId.toBase58());
+      console.log("Provider:", provider);
 
       return new Program(idl, programId, provider);
     } catch (error) {
