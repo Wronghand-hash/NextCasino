@@ -1,20 +1,25 @@
 'use client'; // Mark this as a Client Component
 
-import { useWallet } from '@solana/wallet-adapter-react';
-import { Connection, PublicKey, SystemProgram, Commitment, Transaction, Keypair, VersionedTransaction, ConfirmOptions } from '@solana/web3.js';
-import { Program, AnchorProvider, Wallet } from '@coral-xyz/anchor';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { Connection, PublicKey, SystemProgram, Transaction, VersionedTransaction, Keypair, Commitment } from '@solana/web3.js';
+import { Program, AnchorProvider, Wallet, Idl } from '@coral-xyz/anchor';
 import { useState } from 'react';
 import { BN } from '@coral-xyz/anchor';
+import idl from './utils/casino_plinko.json'; // Ensure this is imported correctly
 
-const idl = require('./utils/casino_plinko.json')
+// Define the IDL type for TypeScript
+interface CasinoPlinkoIdl extends Idl {
+  address: string;
+}
 
-const programID = new PublicKey(idl.address);
+const programID = new PublicKey((idl as CasinoPlinkoIdl).address);
 const network = 'https://api.devnet.solana.com';
-const opts: ConfirmOptions = { commitment: 'processed' }; // Use ConfirmOptions from @solana/web3.js
+const opts = { commitment: 'confirmed' as Commitment }; // Explicitly type commitment as Commitment
 
 export default function Home() {
+  const { connection } = useConnection(); // Use the connection from the wallet adapter
   const wallet = useWallet();
-  const connection = new Connection(network, opts.commitment); // Correct initialization
   const [balance, setBalance] = useState(0);
 
   // Adapt the wallet object to match the Wallet interface expected by AnchorProvider
@@ -46,7 +51,7 @@ export default function Home() {
     }
 
     const provider = getProvider();
-    const program = new Program(idl, programID, provider);
+    const program = new Program(idl as CasinoPlinkoIdl, programID, provider); // Correctly pass provider
 
     const [playerAccountPDA] = await PublicKey.findProgramAddress(
       [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
@@ -76,7 +81,7 @@ export default function Home() {
     }
 
     const provider = getProvider();
-    const program = new Program(idl, programID, provider);
+    const program = new Program(idl as CasinoPlinkoIdl, programID, provider); // Correctly pass provider
 
     const [playerAccountPDA] = await PublicKey.findProgramAddress(
       [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
@@ -112,7 +117,7 @@ export default function Home() {
     }
 
     const provider = getProvider();
-    const program = new Program(idl, programID, provider);
+    const program = new Program(idl as CasinoPlinkoIdl, programID, provider); // Correctly pass provider
 
     const [playerAccountPDA] = await PublicKey.findProgramAddress(
       [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
@@ -143,6 +148,9 @@ export default function Home() {
   return (
     <div style={{ padding: '20px', fontFamily: 'var(--font-geist-sans)' }}>
       <h1>Casino Plinko</h1>
+      <div style={{ marginBottom: '20px' }}>
+        <WalletMultiButton /> {/* Add the wallet connection button */}
+      </div>
       <button
         onClick={initializePlayer}
         style={{ marginRight: '10px', padding: '10px 20px', fontSize: '16px' }}
