@@ -3,9 +3,10 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey, SystemProgram, Commitment, Transaction, Keypair, VersionedTransaction, ConfirmOptions } from '@solana/web3.js';
 import { Program, AnchorProvider, Wallet } from '@coral-xyz/anchor';
-import idl from './utils/casino_plinko.json';
 import { useState } from 'react';
 import { BN } from '@coral-xyz/anchor';
+
+const idl = require('./utils/casino_plinko.json')
 
 const programID = new PublicKey(idl.address);
 const network = 'https://api.devnet.solana.com';
