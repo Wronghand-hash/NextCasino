@@ -51,7 +51,10 @@ export default function Home() {
     }
 
     const provider = getProvider();
-    const program = new Program(idl as CasinoPlinkoIdl, programID, provider); // Correctly pass provider
+    const program = new Program(
+      idl as CasinoPlinkoIdl, // IDL
+      provider // Provider (AnchorProvider)
+    );
 
     const [playerAccountPDA] = await PublicKey.findProgramAddress(
       [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
@@ -81,7 +84,10 @@ export default function Home() {
     }
 
     const provider = getProvider();
-    const program = new Program(idl as CasinoPlinkoIdl, programID, provider); // Correctly pass provider
+    const program = new Program(
+      idl as CasinoPlinkoIdl, // IDL
+      provider // Provider (AnchorProvider)
+    );
 
     const [playerAccountPDA] = await PublicKey.findProgramAddress(
       [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
@@ -117,7 +123,10 @@ export default function Home() {
     }
 
     const provider = getProvider();
-    const program = new Program(idl as CasinoPlinkoIdl, programID, provider); // Correctly pass provider
+    const program = new Program(
+      idl as CasinoPlinkoIdl, // IDL
+      provider // Provider (AnchorProvider)
+    );
 
     const [playerAccountPDA] = await PublicKey.findProgramAddress(
       [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
