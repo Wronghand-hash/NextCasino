@@ -1,55 +1,39 @@
-import { useMemo, useEffect, useState } from "react";
+// utils/programProvider.ts
+import { createContext, useContext, ReactNode } from "react";
+import { Program, AnchorProvider, Wallet } from "@project-serum/anchor";
+import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
-import { AnchorProvider, Program, Idl } from "@coral-xyz/anchor";
-import idl from "./casino_plinko.json"; // Ensure the path is correct
+import idl from "./casino_plinko.json"; // Adjust the path to your IDL file
 
-const preflightCommitment = "processed";
-const commitment = "confirmed";
-const programID = new PublicKey(idl.address); // Use the address from the IDL
+// Replace with your program's public key
+const PROGRAM_ID = new PublicKey("Byn4gnsR2JgmeyrSXYg4e4iCms2ou56pMV35bEhSWFZk");
 
-export const useAnchor = () => {
-  const { wallet, connected } = useWallet();
-  const [provider, setProvider] = useState<AnchorProvider | null>(null);
-  const [program, setProgram] = useState<Program<Idl> | null>(null);
+// Define the context
+const ProgramContext = createContext<Program | null>(null);
 
-  // Establish a connection to the Solana devnet
-  const connection = useMemo(() => new Connection(clusterApiUrl("devnet"), commitment), []);
+export const ProgramProvider = ({ children }: { children: ReactNode }) => {
+  const { wallet, publicKey } = useWallet(); // Get wallet from wallet adapter
+  const network = clusterApiUrl("devnet"); // Use devnet for testing
+  const connection = new Connection(network, "confirmed");
 
-  // Create a provider when the wallet is connected
-  useEffect(() => {
-    if (wallet && connected && wallet.adapter) {
-      const newProvider = new AnchorProvider(connection, wallet.adapter, {
-        preflightCommitment,
-        commitment,
-      });
-      setProvider(newProvider);
-    } else {
-      setProvider(null);
-    }
-  }, [wallet, connected, connection]);
-
-  // Create a program when the provider is available
-  useEffect(() => {
-    if (!provider) {
-      setProgram(null);
-      return;
-    }
-
-    try {
-      const newProgram = new Program(idl as Idl, programID, provider);
-      setProgram(newProgram);
-    } catch (error) {
-      console.error("Error initializing program:", error);
-      setProgram(null);
-    }
-  }, [provider]);
-
-  return {
-    wallet,
+  const provider = new AnchorProvider(
     connection,
-    provider,
-    program,
-    programID,
-  };
+    wallet as unknown as Wallet,
+    AnchorProvider.defaultOptions()
+  );
+
+  const program = new Program(idl as any, PROGRAM_ID, provider);
+
+  return (
+    <ProgramContext.Provider value={program}>{children}</ProgramContext.Provider>
+  );
+};
+
+// Custom hook to access the program
+export const useProgram = () => {
+  const program = useContext(ProgramContext);
+  if (!program) {
+    throw new Error("useProgram must be used within a ProgramProvider");
+  }
+  return { program };
 };

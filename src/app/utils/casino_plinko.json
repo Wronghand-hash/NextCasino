@@ -1,6 +1,8 @@
 {
   "address": "Byn4gnsR2JgmeyrSXYg4e4iCms2ou56pMV35bEhSWFZk",
   "kind": "anchor",
+  "name": "casino_plinko",
+  "version": "0.1.0",
   "metadata": {
     "name": "casino_plinko",
     "version": "0.1.0",
