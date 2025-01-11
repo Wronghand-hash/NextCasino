@@ -1,41 +1,41 @@
 'use client'; // Mark this as a Client Component
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Connection, PublicKey, SystemProgram, Commitment, Transaction, Keypair } from '@solana/web3.js';
-import { Program, AnchorProvider, Wallet } from '@project-serum/anchor';
+import { Connection, PublicKey, SystemProgram, Commitment, Transaction, Keypair, VersionedTransaction, ConfirmOptions } from '@solana/web3.js';
+import { Program, AnchorProvider, Wallet } from '@coral-xyz/anchor';
 import idl from './utils/casino_plinko.json';
 import { useState } from 'react';
 import { BN } from '@coral-xyz/anchor';
 
 const programID = new PublicKey(idl.address);
 const network = 'https://api.devnet.solana.com';
-const opts = { preflightCommitment: 'processed' as Commitment }; // Explicitly set as Commitment
+const opts: ConfirmOptions = { commitment: 'processed' }; // Use ConfirmOptions from @solana/web3.js
 
 export default function Home() {
   const wallet = useWallet();
-  const connection = new Connection(network, opts.preflightCommitment); // Correct initialization
+  const connection = new Connection(network, opts.commitment); // Correct initialization
   const [balance, setBalance] = useState(0);
 
   // Adapt the wallet object to match the Wallet interface expected by AnchorProvider
   const adaptedWallet: Wallet = {
     publicKey: wallet.publicKey!, // Use non-null assertion to satisfy the Wallet interface
-    signTransaction: async (transaction: Transaction) => {
+    signTransaction: async <T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> => {
       if (!wallet.signTransaction) {
         throw new Error('Wallet does not support signing transactions');
       }
-      return wallet.signTransaction(transaction);
+      return wallet.signTransaction(transaction) as Promise<T>;
     },
-    signAllTransactions: async (transactions: Transaction[]) => {
+    signAllTransactions: async <T extends Transaction | VersionedTransaction>(transactions: T[]): Promise<T[]> => {
       if (!wallet.signAllTransactions) {
         throw new Error('Wallet does not support signing multiple transactions');
       }
-      return wallet.signAllTransactions(transactions);
+      return wallet.signAllTransactions(transactions) as Promise<T[]>;
     },
     payer: Keypair.generate(), // Add a dummy payer (not recommended for production)
   };
 
   const getProvider = () => {
-    return new AnchorProvider(connection, adaptedWallet, opts.preflightCommitment);
+    return new AnchorProvider(connection, adaptedWallet, opts);
   };
 
   const initializePlayer = async () => {
@@ -53,13 +53,14 @@ export default function Home() {
     );
 
     try {
-      await program.rpc.initializePlayer(new BN(100), {
-        accounts: {
+      await program.methods
+        .initializePlayer(new BN(100))
+        .accounts({
           playerAccount: playerAccountPDA,
           player: wallet.publicKey,
           systemProgram: SystemProgram.programId,
-        },
-      });
+        })
+        .rpc();
       alert('Player account initialized!');
     } catch (error) {
       console.error('Error initializing player account:', error);
@@ -87,14 +88,15 @@ export default function Home() {
     );
 
     try {
-      await program.rpc.placeBet(new BN(10), {
-        accounts: {
+      await program.methods
+        .placeBet(new BN(10))
+        .accounts({
           playerAccount: playerAccountPDA,
           gameAccount: gameAccountPDA,
           player: wallet.publicKey,
           systemProgram: SystemProgram.programId,
-        },
-      });
+        })
+        .rpc();
       alert('Bet placed!');
     } catch (error) {
       console.error('Error placing bet:', error);
@@ -122,13 +124,14 @@ export default function Home() {
     );
 
     try {
-      await program.rpc.determineResult(1, {
-        accounts: {
+      await program.methods
+        .determineResult(1)
+        .accounts({
           gameAccount: gameAccountPDA,
           playerAccount: playerAccountPDA,
           player: wallet.publicKey,
-        },
-      });
+        })
+        .rpc();
       alert('Result determined!');
     } catch (error) {
       console.error('Error determining result:', error);
