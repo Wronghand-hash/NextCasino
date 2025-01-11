@@ -36,7 +36,7 @@
     "src/app/utils/WalletProvider.ts",
     "src/app/utils/programProvider.js",
     "src/app/utils/programProvider.js"
-  ],
+, "next.config.mjs"  ],
   "exclude": [
     "node_modules"
   ]
