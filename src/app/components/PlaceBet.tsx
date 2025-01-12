@@ -10,12 +10,39 @@ export const PlaceBet = () => {
     const wallet = useWallet();
     const [betAmount, setBetAmount] = useState<number>(10);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [playerBalance, setPlayerBalance] = useState<number | null>(null);
+
+    const fetchPlayerBalance = async () => {
+        if (!wallet.publicKey || !program) return;
+
+        const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
+            [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
+            program.programId
+        );
+
+        const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
+        setPlayerBalance(playerAccount.balance.toNumber());
+    };
 
     const placeBet = async () => {
-        if (!wallet.publicKey || !program) {
-            setError("Wallet not connected or program not loaded");
+        if (!wallet.connected || !wallet.publicKey) {
+            setError("Please connect your wallet first.");
             return;
         }
+
+        if (!program) {
+            setError("Program not loaded. Please try again.");
+            return;
+        }
+
+        if (betAmount <= 0) {
+            setError("Bet amount must be greater than 0.");
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
 
         try {
             // Derive the PDA for the player account
@@ -40,24 +67,39 @@ export const PlaceBet = () => {
                 },
             });
 
-            setError(null);
+            // Fetch updated balance
+            await fetchPlayerBalance();
+
             alert('Bet placed successfully!');
         } catch (err) {
             console.error("Failed to place bet:", err);
-            setError("Failed to place bet. Please check your balance and try again.");
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("Failed to place bet. Please check your balance and try again.");
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div>
-            <input
-                type="number"
-                value={betAmount}
-                onChange={(e) => setBetAmount(Number(e.target.value))}
-                min="1" // Ensure the bet amount is at least 1
-            />
-            <button onClick={placeBet}>Place Bet</button>
+            <label>
+                Bet Amount:
+                <input
+                    type="number"
+                    value={betAmount}
+                    onChange={(e) => setBetAmount(Number(e.target.value))}
+                    min="1"
+                    disabled={loading}
+                />
+            </label>
+            <button onClick={placeBet} disabled={loading || !wallet.connected}>
+                {loading ? 'Placing Bet...' : 'Place Bet'}
+            </button>
             {error && <p style={{ color: 'red' }}>{error}</p>}
+            {playerBalance !== null && <p>Your Balance: {playerBalance}</p>}
         </div>
     );
 };
