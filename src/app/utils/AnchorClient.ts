@@ -1,6 +1,7 @@
 import { Program, Provider, web3, Idl, AnchorProvider, BN } from '@coral-xyz/anchor';
 import IDL from "../idl/casino_plinko.json"; // Adjust the path to your IDL
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useMemo } from 'react';
 
 // Define the PlayerAccount type
 type PlayerAccount = {
@@ -29,10 +30,24 @@ type CasinoPlinkoProgram = Program & {
 
 const programId = new web3.PublicKey("Byn4gnsR2JgmeyrSXYg4e4iCms2ou56pMV35bEhSWFZk");
 
-export const useAnchorProgram = (): CasinoPlinkoProgram => {
-    const wallet = useWallet();
-    const connection = new web3.Connection(web3.clusterApiUrl('devnet'));
-    const provider = new AnchorProvider(connection, wallet as any, {});
+export const useAnchorProgram = (): CasinoPlinkoProgram | null => {
+    const { publicKey, signTransaction, signAllTransactions } = useWallet();
 
-    return new Program(IDL as Idl, provider) as CasinoPlinkoProgram;
+    const connection = new web3.Connection(web3.clusterApiUrl('devnet'), 'confirmed');
+
+    const provider = useMemo(() => {
+        if (!publicKey || !signTransaction || !signAllTransactions) return null;
+        return new AnchorProvider(connection, {
+            publicKey,
+            signTransaction,
+            signAllTransactions,
+        }, {
+            commitment: 'confirmed',
+        });
+    }, [publicKey, signTransaction, signAllTransactions, connection]);
+
+    return useMemo(() => {
+        if (!provider) return null;
+        return new Program(IDL as Idl, provider) as CasinoPlinkoProgram;
+    }, [provider]);
 };

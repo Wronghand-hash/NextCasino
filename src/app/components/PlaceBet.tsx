@@ -9,24 +9,49 @@ export const PlaceBet = () => {
     const program = useAnchorProgram();
     const wallet = useWallet();
     const [betAmount, setBetAmount] = useState<number>(10);
+    const [error, setError] = useState<string | null>(null);
+    const [balance, setBalance] = useState<number | null>(null);
 
     const placeBet = async () => {
-        if (!wallet.publicKey) return;
-        const [gameAccountPda] = await web3.PublicKey.findProgramAddress(
-            [Buffer.from('game_account'), wallet.publicKey.toBuffer()],
-            program.programId
-        );
+        if (!wallet.publicKey || !program) {
+            setError("Wallet not connected or program not loaded");
+            return;
+        }
 
-        await program.rpc.placeBet(new BN(betAmount), {
-            accounts: {
-                playerAccount: gameAccountPda,
-                gameAccount: gameAccountPda,
-                player: wallet.publicKey,
-                systemProgram: web3.SystemProgram.programId,
-            },
-        });
+        try {
+            // Derive the PDA for the player account
+            const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
+                [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
+                program.programId
+            );
 
-        alert('Bet placed successfully!');
+            // Derive the PDA for the game account
+            const [gameAccountPda] = await web3.PublicKey.findProgramAddress(
+                [Buffer.from('game_account'), wallet.publicKey.toBuffer()],
+                program.programId
+            );
+
+            // Place the bet
+            await program.rpc.placeBet(new BN(betAmount), {
+                accounts: {
+                    playerAccount: playerAccountPda, // Use the player account PDA
+                    gameAccount: gameAccountPda, // Use the game account PDA
+                    player: wallet.publicKey,
+                    systemProgram: web3.SystemProgram.programId,
+                },
+            });
+
+            // Fetch the updated player account data
+            const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
+            setBalance(playerAccount.balance.toNumber());
+
+            // Clear any previous errors
+            setError(null);
+            alert('Bet placed successfully!');
+        } catch (err) {
+            console.error("Failed to place bet:", err);
+            setError("Failed to place bet. Please check your balance and try again.");
+        }
     };
 
     return (
@@ -35,8 +60,11 @@ export const PlaceBet = () => {
                 type="number"
                 value={betAmount}
                 onChange={(e) => setBetAmount(Number(e.target.value))}
+                min="1" // Ensure the bet amount is at least 1
             />
             <button onClick={placeBet}>Place Bet</button>
+            {balance !== null && <p>Your Balance: {balance}</p>}
+            {error && <p style={{ color: 'red' }}>{error}</p>}
         </div>
     );
 };
