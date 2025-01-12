@@ -10,7 +10,6 @@ export const PlaceBet = () => {
     const wallet = useWallet();
     const [betAmount, setBetAmount] = useState<number>(10);
     const [error, setError] = useState<string | null>(null);
-    const [balance, setBalance] = useState<number | null>(null);
 
     const placeBet = async () => {
         if (!wallet.publicKey || !program) {
@@ -34,18 +33,13 @@ export const PlaceBet = () => {
             // Place the bet
             await program.rpc.placeBet(new BN(betAmount), {
                 accounts: {
-                    playerAccount: playerAccountPda, // Use the player account PDA
-                    gameAccount: gameAccountPda, // Use the game account PDA
+                    playerAccount: playerAccountPda,
+                    gameAccount: gameAccountPda,
                     player: wallet.publicKey,
                     systemProgram: web3.SystemProgram.programId,
                 },
             });
 
-            // Fetch the updated player account data
-            const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
-            setBalance(playerAccount.balance.toNumber());
-
-            // Clear any previous errors
             setError(null);
             alert('Bet placed successfully!');
         } catch (err) {
@@ -63,7 +57,6 @@ export const PlaceBet = () => {
                 min="1" // Ensure the bet amount is at least 1
             />
             <button onClick={placeBet}>Place Bet</button>
-            {balance !== null && <p>Your Balance: {balance}</p>}
             {error && <p style={{ color: 'red' }}>{error}</p>}
         </div>
     );

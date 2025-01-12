@@ -25,15 +25,71 @@
       "accounts": [
         {
           "name": "game_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
         },
         {
           "name": "player_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
         },
         {
           "name": "player",
-          "signer": true
+          "signer": true,
+          "relations": [
+            "game_account",
+            "player_account"
+          ]
         }
       ],
       "args": [
@@ -125,7 +181,34 @@
       "accounts": [
         {
           "name": "player_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
         },
         {
           "name": "game_account",
@@ -159,7 +242,10 @@
         {
           "name": "player",
           "writable": true,
-          "signer": true
+          "signer": true,
+          "relations": [
+            "player_account"
+          ]
         },
         {
           "name": "system_program",
@@ -212,6 +298,11 @@
       "code": 6001,
       "name": "InvalidInitialBalance",
       "msg": "Invalid initial balance"
+    },
+    {
+      "code": 6002,
+      "name": "Unauthorized",
+      "msg": "Unauthorized access"
     }
   ],
   "types": [
