@@ -16,13 +16,17 @@ export const PlaceBet = () => {
     const fetchPlayerBalance = async () => {
         if (!wallet.publicKey || !program) return;
 
-        const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
-            [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
-            program.programId
-        );
+        try {
+            const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
+                [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
+                program.programId
+            );
 
-        const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
-        setPlayerBalance(playerAccount.balance.toNumber());
+            const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
+            setPlayerBalance(playerAccount.balance.toNumber());
+        } catch (err) {
+            console.error("Failed to fetch balance:", err);
+        }
     };
 
     const placeBet = async () => {
@@ -45,19 +49,16 @@ export const PlaceBet = () => {
         setError(null);
 
         try {
-            // Derive the PDA for the player account
             const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
                 [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
                 program.programId
             );
 
-            // Derive the PDA for the game account
             const [gameAccountPda] = await web3.PublicKey.findProgramAddress(
                 [Buffer.from('game_account'), wallet.publicKey.toBuffer()],
                 program.programId
             );
 
-            // Place the bet
             await program.rpc.placeBet(new BN(betAmount), {
                 accounts: {
                     playerAccount: playerAccountPda,
@@ -67,17 +68,14 @@ export const PlaceBet = () => {
                 },
             });
 
-            // Fetch updated balance
             await fetchPlayerBalance();
-
             alert('Bet placed successfully!');
         } catch (err) {
             console.error("Failed to place bet:", err);
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError("Failed to place bet. Please check your balance and try again.");
+            if (err instanceof web3.SendTransactionError) {
+                console.log("Transaction Logs:", err.logs);
             }
+            setError("Failed to place bet.");
         } finally {
             setLoading(false);
         }
