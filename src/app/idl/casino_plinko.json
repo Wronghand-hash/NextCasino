@@ -9,6 +9,9 @@
   "instructions": [
     {
       "name": "determine_result",
+      "docs": [
+        "Determine the result of the game"
+      ],
       "discriminator": [
         127,
         255,
@@ -42,6 +45,9 @@
     },
     {
       "name": "initialize_player",
+      "docs": [
+        "Initialize the player account"
+      ],
       "discriminator": [
         79,
         249,
@@ -103,6 +109,9 @@
     },
     {
       "name": "place_bet",
+      "docs": [
+        "Place a bet"
+      ],
       "discriminator": [
         222,
         62,
@@ -208,6 +217,9 @@
   "types": [
     {
       "name": "GameAccount",
+      "docs": [
+        "Define the GameAccount state"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -228,6 +240,9 @@
     },
     {
       "name": "PlayerAccount",
+      "docs": [
+        "Define the PlayerAccount state"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
