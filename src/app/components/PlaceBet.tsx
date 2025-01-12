@@ -16,17 +16,17 @@ export const PlaceBet = () => {
     const fetchPlayerBalance = async () => {
         if (!wallet.publicKey || !program) return;
 
-        const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
-            [Buffer.from("player_account"), wallet.publicKey.toBuffer()],
-            program.programId
-        );
-
         try {
+            const playerAccountPda = web3.PublicKey.findProgramAddressSync(
+                [Buffer.from("player_account"), wallet.publicKey.toBuffer()],
+                program.programId
+            )[0];
+
             const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
             setPlayerBalance(playerAccount.balance.toNumber());
         } catch (err) {
             console.error("Failed to fetch player balance:", err);
-            setError("Failed to fetch player balance. Please initialize your account.");
+            setError("Player account not found. Please initialize your account.");
         }
     };
 
@@ -36,7 +36,7 @@ export const PlaceBet = () => {
             return;
         }
 
-        if (!program) {
+        if (!program || !program.programId) {
             setError("Program not loaded. Please try again.");
             return;
         }
@@ -50,15 +50,15 @@ export const PlaceBet = () => {
         setError(null);
 
         try {
-            const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
+            const playerAccountPda = web3.PublicKey.findProgramAddressSync(
                 [Buffer.from("player_account"), wallet.publicKey.toBuffer()],
                 program.programId
-            );
+            )[0];
 
-            const [gameAccountPda] = await web3.PublicKey.findProgramAddress(
+            const gameAccountPda = web3.PublicKey.findProgramAddressSync(
                 [Buffer.from("game_account"), wallet.publicKey.toBuffer()],
                 program.programId
-            );
+            )[0];
 
             await program.rpc.placeBet(new BN(betAmount), {
                 accounts: {
@@ -69,7 +69,11 @@ export const PlaceBet = () => {
                 },
             });
 
-            await fetchPlayerBalance();
+            await fetchPlayerBalance().catch((err) => {
+                console.error("Failed to update balance:", err);
+                setError("Bet placed, but balance update failed.");
+            });
+
             alert("Bet placed successfully!");
         } catch (err) {
             console.error("Failed to place bet:", err);
