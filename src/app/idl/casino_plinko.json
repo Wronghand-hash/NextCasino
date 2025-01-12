@@ -1,5 +1,5 @@
 {
-  "address": "97Hk5Mx8zdRdVAa2JFBrhKKfyCHEgxF34sRgojdNkfJ1",
+  "address": "H3NfkuUXGiwNQK8f4xDkqVcPEWxUTRWJ3oLHyAeerGYd",
   "metadata": {
     "name": "casino_plinko",
     "version": "0.1.0",
@@ -85,17 +85,75 @@
         },
         {
           "name": "player",
-          "signer": true,
-          "relations": [
-            "game_account",
-            "player_account"
-          ]
+          "signer": true
         }
       ],
       "args": [
         {
           "name": "result",
-          "type": "u8"
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "initialize_game",
+      "docs": [
+        "Initialize the game account"
+      ],
+      "discriminator": [
+        44,
+        62,
+        102,
+        247,
+        126,
+        208,
+        130,
+        215
+      ],
+      "accounts": [
+        {
+          "name": "game_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "initial_balance",
+          "type": "u64"
         }
       ]
     },
@@ -242,10 +300,7 @@
         {
           "name": "player",
           "writable": true,
-          "signer": true,
-          "relations": [
-            "player_account"
-          ]
+          "signer": true
         },
         {
           "name": "system_program",
@@ -303,20 +358,27 @@
       "code": 6002,
       "name": "Unauthorized",
       "msg": "Unauthorized access"
+    },
+    {
+      "code": 6003,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6004,
+      "name": "AlreadyInitialized",
+      "msg": "Account already initialized"
     }
   ],
   "types": [
     {
       "name": "GameAccount",
-      "docs": [
-        "Define the GameAccount state"
-      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "player",
-            "type": "pubkey"
+            "name": "balance",
+            "type": "u64"
           },
           {
             "name": "bet_amount",
@@ -324,23 +386,16 @@
           },
           {
             "name": "result",
-            "type": "u8"
+            "type": "bool"
           }
         ]
       }
     },
     {
       "name": "PlayerAccount",
-      "docs": [
-        "Define the PlayerAccount state"
-      ],
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "player",
-            "type": "pubkey"
-          },
           {
             "name": "balance",
             "type": "u64"
