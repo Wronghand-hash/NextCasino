@@ -1,9 +1,9 @@
 "use client";
 
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useState } from 'react';
-import { useAnchorProgram } from '../utils/AnchorClient';
-import { BN, web3 } from '@coral-xyz/anchor';
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useState } from "react";
+import { useAnchorProgram } from "../utils/AnchorClient";
+import { BN, web3 } from "@coral-xyz/anchor";
 
 export const PlaceBet = () => {
     const program = useAnchorProgram();
@@ -16,16 +16,17 @@ export const PlaceBet = () => {
     const fetchPlayerBalance = async () => {
         if (!wallet.publicKey || !program) return;
 
-        try {
-            const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
-                [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
-                program.programId
-            );
+        const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
+            [Buffer.from("player_account"), wallet.publicKey.toBuffer()],
+            program.programId
+        );
 
+        try {
             const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
             setPlayerBalance(playerAccount.balance.toNumber());
         } catch (err) {
-            console.error("Failed to fetch balance:", err);
+            console.error("Failed to fetch player balance:", err);
+            setError("Failed to fetch player balance. Please initialize your account.");
         }
     };
 
@@ -50,12 +51,12 @@ export const PlaceBet = () => {
 
         try {
             const [playerAccountPda] = await web3.PublicKey.findProgramAddress(
-                [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
+                [Buffer.from("player_account"), wallet.publicKey.toBuffer()],
                 program.programId
             );
 
             const [gameAccountPda] = await web3.PublicKey.findProgramAddress(
-                [Buffer.from('game_account'), wallet.publicKey.toBuffer()],
+                [Buffer.from("game_account"), wallet.publicKey.toBuffer()],
                 program.programId
             );
 
@@ -69,13 +70,10 @@ export const PlaceBet = () => {
             });
 
             await fetchPlayerBalance();
-            alert('Bet placed successfully!');
+            alert("Bet placed successfully!");
         } catch (err) {
             console.error("Failed to place bet:", err);
-            if (err instanceof web3.SendTransactionError) {
-                console.log("Transaction Logs:", err.logs);
-            }
-            setError("Failed to place bet.");
+            setError("Failed to place bet. Please check your balance and try again.");
         } finally {
             setLoading(false);
         }
@@ -94,9 +92,9 @@ export const PlaceBet = () => {
                 />
             </label>
             <button onClick={placeBet} disabled={loading || !wallet.connected}>
-                {loading ? 'Placing Bet...' : 'Place Bet'}
+                {loading ? "Placing Bet..." : "Place Bet"}
             </button>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p style={{ color: "red" }}>{error}</p>}
             {playerBalance !== null && <p>Your Balance: {playerBalance}</p>}
         </div>
     );

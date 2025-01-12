@@ -28,7 +28,7 @@ type CasinoPlinkoProgram = Program & {
     };
 };
 
-const programId = new web3.PublicKey("Byn4gnsR2JgmeyrSXYg4e4iCms2ou56pMV35bEhSWFZk");
+const programId = new web3.PublicKey("3jE6AwQc8S6VLeViXJeNDMQthsC4bgxdmw2Co47x4Cyt");
 
 export const useAnchorProgram = (): CasinoPlinkoProgram | null => {
     const { publicKey, signTransaction, signAllTransactions } = useWallet();
