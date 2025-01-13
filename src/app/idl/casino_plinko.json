@@ -1,5 +1,5 @@
 {
-  "address": "H3NfkuUXGiwNQK8f4xDkqVcPEWxUTRWJ3oLHyAeerGYd",
+  "address": "BEYxYPc7FMYqTVVS3129Fe8jv9NbEoekPx7qn1R1b7UF",
   "metadata": {
     "name": "casino_plinko",
     "version": "0.1.0",
@@ -7,6 +7,61 @@
     "description": "Created with Anchor"
   },
   "instructions": [
+    {
+      "name": "close_player_account",
+      "docs": [
+        "Close the player account and reclaim rent-exempt SOL"
+      ],
+      "discriminator": [
+        244,
+        181,
+        162,
+        146,
+        184,
+        133,
+        216,
+        95
+      ],
+      "accounts": [
+        {
+          "name": "player_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
     {
       "name": "determine_result",
       "docs": [
@@ -343,6 +398,73 @@
       ]
     }
   ],
+  "events": [
+    {
+      "name": "BetPlaced",
+      "discriminator": [
+        88,
+        88,
+        145,
+        226,
+        126,
+        206,
+        32,
+        0
+      ]
+    },
+    {
+      "name": "GameInitialized",
+      "discriminator": [
+        82,
+        221,
+        11,
+        2,
+        244,
+        52,
+        240,
+        250
+      ]
+    },
+    {
+      "name": "PlayerAccountClosed",
+      "discriminator": [
+        180,
+        149,
+        176,
+        105,
+        135,
+        145,
+        217,
+        113
+      ]
+    },
+    {
+      "name": "PlayerInitialized",
+      "discriminator": [
+        214,
+        37,
+        153,
+        142,
+        63,
+        109,
+        206,
+        15
+      ]
+    },
+    {
+      "name": "ResultDetermined",
+      "discriminator": [
+        1,
+        67,
+        237,
+        200,
+        162,
+        192,
+        46,
+        96
+      ]
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -366,11 +488,32 @@
     },
     {
       "code": 6004,
+      "name": "Underflow",
+      "msg": "Arithmetic underflow"
+    },
+    {
+      "code": 6005,
       "name": "AlreadyInitialized",
       "msg": "Account already initialized"
     }
   ],
   "types": [
+    {
+      "name": "BetPlaced",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "bet_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
     {
       "name": "GameAccount",
       "type": {
@@ -386,7 +529,44 @@
           },
           {
             "name": "result",
-            "type": "bool"
+            "type": {
+              "defined": {
+                "name": "GameResult"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game",
+            "type": "pubkey"
+          },
+          {
+            "name": "initial_balance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameResult",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Win"
+          },
+          {
+            "name": "Loss"
           }
         ]
       }
@@ -399,6 +579,54 @@
           {
             "name": "balance",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerAccountClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "initial_balance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ResultDetermined",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "result",
+            "type": {
+              "defined": {
+                "name": "GameResult"
+              }
+            }
           }
         ]
       }
