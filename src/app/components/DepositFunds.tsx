@@ -35,6 +35,8 @@ const DepositFunds: React.FC = () => {
                 program.programId
             );
 
+            console.log('Player Account PDA:', playerAccountPda.toString());
+
             // Call the deposit_funds instruction
             const tx = await program.methods
                 .depositFunds(new BN(lamports))
@@ -44,6 +46,8 @@ const DepositFunds: React.FC = () => {
                     systemProgram: web3.SystemProgram.programId,
                 })
                 .rpc();
+
+            console.log('Transaction:', tx);
 
             toast.success(`Deposit successful! Transaction: ${tx}`);
             setAmount('');
