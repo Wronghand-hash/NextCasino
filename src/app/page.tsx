@@ -5,6 +5,7 @@ import { PlayerAccount } from './components/PlayerAccount';
 import { PlaceBet } from './components/PlaceBet';
 import { useWallet } from '@solana/wallet-adapter-react';
 import DepositFunds from './components/DepositFunds';
+import Game from './components/Game';
 
 export default function Home() {
   const { connected } = useWallet();
@@ -20,6 +21,7 @@ export default function Home() {
           <PlayerAccount />
           <DepositFunds /> {/* Add the DepositFunds component here */}
           <PlaceBet />
+          <Game />
         </>
       ) : (
         <p style={styles.connectMessage}>Please connect your wallet to start playing.</p>
