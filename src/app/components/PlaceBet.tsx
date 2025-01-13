@@ -215,34 +215,112 @@ export const PlaceBet = () => {
     };
 
     return (
-        <div>
-            <label>
-                Bet Amount:
-                <input
-                    type="number"
-                    value={betAmount}
-                    onChange={(e) => setBetAmount(Number(e.target.value))}
-                    min="1"
-                    disabled={loading}
-                />
-            </label>
-            <button onClick={placeBet} disabled={loading || !wallet.connected}>
-                {loading ? "Placing Bet..." : "Place Bet"}
-            </button>
-            <button onClick={initializePlayer} disabled={loading || !wallet.connected}>
-                Initialize Player
-            </button>
-            <button onClick={initializeGame} disabled={loading || !wallet.connected}>
-                Initialize Game
-            </button>
-            <button onClick={() => determineResult(true)} disabled={loading || !wallet.connected}>
-                Simulate Win
-            </button>
-            <button onClick={() => determineResult(false)} disabled={loading || !wallet.connected}>
-                Simulate Loss
-            </button>
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {playerBalance !== null && <p>Your Balance: {playerBalance}</p>}
+        <div style={styles.container}>
+            <h2 style={styles.title}>Place Your Bet</h2>
+            <div style={styles.inputGroup}>
+                <label style={styles.label}>
+                    Bet Amount:
+                    <input
+                        type="number"
+                        value={betAmount}
+                        onChange={(e) => setBetAmount(Number(e.target.value))}
+                        min="1"
+                        disabled={loading}
+                        style={styles.input}
+                    />
+                </label>
+                <button
+                    onClick={placeBet}
+                    disabled={loading || !wallet.connected}
+                    style={styles.button}
+                >
+                    {loading ? "Placing Bet..." : "Place Bet"}
+                </button>
+            </div>
+            <div style={styles.buttonGroup}>
+                <button
+                    onClick={initializePlayer}
+                    disabled={loading || !wallet.connected}
+                    style={styles.button}
+                >
+                    Initialize Player
+                </button>
+                <button
+                    onClick={initializeGame}
+                    disabled={loading || !wallet.connected}
+                    style={styles.button}
+                >
+                    Initialize Game
+                </button>
+                <button
+                    onClick={() => determineResult(true)}
+                    disabled={loading || !wallet.connected}
+                    style={styles.button}
+                >
+                    Simulate Win
+                </button>
+                <button
+                    onClick={() => determineResult(false)}
+                    disabled={loading || !wallet.connected}
+                    style={styles.button}
+                >
+                    Simulate Loss
+                </button>
+            </div>
+            {error && <p style={styles.error}>{error}</p>}
+            {playerBalance !== null && <p style={styles.balance}>Your Balance: {playerBalance}</p>}
         </div>
     );
+};
+
+const styles = {
+    container: {
+        padding: '20px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        backgroundColor: '#f9f9f9',
+        marginBottom: '20px',
+    },
+    title: {
+        fontSize: '24px',
+        marginBottom: '16px',
+        color: '#333',
+    },
+    inputGroup: {
+        display: 'flex',
+        gap: '10px',
+        marginBottom: '16px',
+    },
+    label: {
+        fontSize: '16px',
+        color: '#333',
+    },
+    input: {
+        padding: '8px',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+        fontSize: '14px',
+    },
+    buttonGroup: {
+        display: 'flex',
+        gap: '10px',
+        marginBottom: '16px',
+    },
+    button: {
+        padding: '10px 20px',
+        backgroundColor: '#007bff',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        fontSize: '14px',
+    },
+    balance: {
+        fontSize: '18px',
+        color: '#333',
+    },
+    error: {
+        color: 'red',
+        fontSize: '14px',
+    },
 };

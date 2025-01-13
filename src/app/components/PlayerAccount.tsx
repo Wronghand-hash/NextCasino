@@ -123,18 +123,70 @@ export const PlayerAccount = () => {
     };
 
     return (
-        <div>
-            <button onClick={initializePlayer} disabled={loading || !wallet.connected}>
-                {loading ? "Initializing..." : "Initialize Player"}
-            </button>
-            <button onClick={fetchPlayerBalance} disabled={loading || !wallet.connected}>
-                Fetch Balance
-            </button>
-            <button onClick={closePlayerAccount} disabled={loading || !wallet.connected}>
-                Close Player Account
-            </button>
-            {balance !== null && <p>Balance: {balance}</p>}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+        <div style={styles.container}>
+            <h2 style={styles.title}>Player Account</h2>
+            <div style={styles.buttonGroup}>
+                <button
+                    onClick={initializePlayer}
+                    disabled={loading || !wallet.connected}
+                    style={styles.button}
+                >
+                    {loading ? "Initializing..." : "Initialize Player"}
+                </button>
+                <button
+                    onClick={fetchPlayerBalance}
+                    disabled={loading || !wallet.connected}
+                    style={styles.button}
+                >
+                    Fetch Balance
+                </button>
+                <button
+                    onClick={closePlayerAccount}
+                    disabled={loading || !wallet.connected}
+                    style={styles.button}
+                >
+                    Close Player Account
+                </button>
+            </div>
+            {balance !== null && <p style={styles.balance}>Balance: {balance}</p>}
+            {error && <p style={styles.error}>{error}</p>}
         </div>
     );
+};
+
+const styles = {
+    container: {
+        padding: '20px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        backgroundColor: '#f9f9f9',
+        marginBottom: '20px',
+    },
+    title: {
+        fontSize: '24px',
+        marginBottom: '16px',
+        color: '#333',
+    },
+    buttonGroup: {
+        display: 'flex',
+        gap: '10px',
+        marginBottom: '16px',
+    },
+    button: {
+        padding: '10px 20px',
+        backgroundColor: '#007bff',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        fontSize: '14px',
+    },
+    balance: {
+        fontSize: '18px',
+        color: '#333',
+    },
+    error: {
+        color: 'red',
+        fontSize: '14px',
+    },
 };
