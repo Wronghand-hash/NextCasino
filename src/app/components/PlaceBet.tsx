@@ -69,6 +69,7 @@ export const PlaceBet = () => {
 
             setError(null); // Clear any previous errors
             alert("Player account initialized!");
+            await fetchPlayerBalance();
         } catch (err) {
             console.error("Failed to initialize player account:", err);
             setError("Failed to initialize player account.");
