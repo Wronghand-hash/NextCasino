@@ -4,6 +4,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { PlayerAccount } from './components/PlayerAccount';
 import { PlaceBet } from './components/PlaceBet';
 import { useWallet } from '@solana/wallet-adapter-react';
+import DepositFunds from './components/DepositFunds';
 
 export default function Home() {
   const { connected } = useWallet();
@@ -17,6 +18,7 @@ export default function Home() {
       {connected ? (
         <>
           <PlayerAccount />
+          <DepositFunds /> {/* Add the DepositFunds component here */}
           <PlaceBet />
         </>
       ) : (
@@ -40,8 +42,8 @@ const styles = {
     color: '#333',
   },
   walletButtonContainer: {
-    display: 'flex',
-    justifyContent: 'center',
+    display: 'flex' as const,
+    justifyContent: 'center' as const,
     marginBottom: '20px',
   },
   walletButton: {
