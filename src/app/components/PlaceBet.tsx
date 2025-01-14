@@ -1,7 +1,7 @@
 "use client";
 
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useState } from "react";
+import { SetStateAction, useState } from "react";
 import { useAnchorProgram } from "../utils/AnchorClient";
 import { BN, web3 } from "@coral-xyz/anchor";
 import { toast, ToastContainer } from "react-toastify";
@@ -195,8 +195,9 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
                     wallet={wallet}
                     program={program}
                     fetchPlayerBalance={fetchPlayerBalance}
-                    isBetPlaced={isBetPlaced}
-                />
+                    isBetPlaced={isBetPlaced} setIsBetPlaced={function (value: SetStateAction<boolean>): void {
+                        throw new Error("Function not implemented.");
+                    }} />
             )}
 
             {/* Toast notifications */}

@@ -1,21 +1,21 @@
 "use client";
 
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { PlayerAccount } from './components/PlayerAccount';
-import { PlaceBet } from './components/PlaceBet';
-import { useWallet } from '@solana/wallet-adapter-react';
-import DepositFunds from './components/DepositFunds';
-import Game from './components/Game';
-import { useState } from 'react';
-import { useAnchorProgram } from './utils/AnchorClient';
-import { PublicKey } from '@solana/web3.js';
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { PlayerAccount } from "./components/PlayerAccount";
+import { PlaceBet } from "./components/PlaceBet";
+import { useWallet } from "@solana/wallet-adapter-react";
+import DepositFunds from "./components/DepositFunds";
+import Game from "./components/Game";
+import { useState } from "react";
+import { useAnchorProgram } from "./utils/AnchorClient";
+import { PublicKey } from "@solana/web3.js";
 
 export default function Home() {
   const { connected, wallet } = useWallet();
   const program = useAnchorProgram();
   const [betAmount, setBetAmount] = useState<number>(10);
   const [playerBalance, setPlayerBalance] = useState<number | null>(null);
-  const [isBetPlaced, setIsBetPlaced] = useState<boolean>(false); // Track if bet is placed
+  const [isBetPlaced, setIsBetPlaced] = useState<boolean>(false); // Allow dropping ball after bet
 
   const fetchPlayerBalance = async () => {
     if (!wallet?.adapter?.publicKey || !program) return;
@@ -56,8 +56,8 @@ export default function Home() {
               wallet={wallet}
               program={program}
               fetchPlayerBalance={fetchPlayerBalance}
-              isBetPlaced={isBetPlaced}
-            />
+              setIsBetPlaced={setIsBetPlaced} // Reset bet state after ball drop
+              isBetPlaced={false}            />
           )}
         </>
       ) : (
@@ -69,32 +69,32 @@ export default function Home() {
 
 const styles = {
   container: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '100vh',
-    backgroundColor: '#1a1a1a',
-    color: '#ffffff',
-    padding: '20px',
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "100vh",
+    backgroundColor: "#1a1a1a",
+    color: "#ffffff",
+    padding: "20px",
   },
   title: {
-    fontSize: '2.5rem',
-    marginBottom: '20px',
+    fontSize: "2.5rem",
+    marginBottom: "20px",
   },
   walletButtonContainer: {
-    marginBottom: '20px',
+    marginBottom: "20px",
   },
   walletButton: {
-    backgroundColor: '#4CAF50',
-    color: '#ffffff',
-    border: 'none',
-    padding: '10px 20px',
-    borderRadius: '5px',
-    cursor: 'pointer',
+    backgroundColor: "#4CAF50",
+    color: "#ffffff",
+    border: "none",
+    padding: "10px 20px",
+    borderRadius: "5px",
+    cursor: "pointer",
   },
   connectWalletMessage: {
-    fontSize: '1.2rem',
-    color: '#cccccc',
+    fontSize: "1.2rem",
+    color: "#cccccc",
   },
 };

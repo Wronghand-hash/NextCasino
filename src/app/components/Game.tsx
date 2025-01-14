@@ -9,14 +9,15 @@ interface GameProps {
     program: any; // Replace `any` with the correct type for your Anchor program
     betAmount: number;
     fetchPlayerBalance: () => Promise<void>;
-    isBetPlaced: boolean; // Add isBetPlaced prop
+    isBetPlaced: boolean;
+    setIsBetPlaced: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 class PlinkoGame extends Phaser.Scene {
     private balls: Phaser.Physics.Matter.Image[] = [];
-    private isBallDropped: boolean = false;
+    isBallDropped: boolean = false;
     private rewardText!: Phaser.GameObjects.Text;
-    private isBetPlaced: boolean = false; // Track if bet is placed
+    private isBetPlaced: boolean = false;
 
     constructor() {
         super({ key: 'PlinkoGame' });
@@ -71,13 +72,6 @@ class PlinkoGame extends Phaser.Scene {
             }).setOrigin(0.5);
         }
 
-        // Enable input for dropping balls
-        this.input.on('pointerdown', () => {
-            if (!this.isBallDropped && this.isBetPlaced) {
-                this.dropBall();
-            }
-        });
-
         // Text to display the reward
         this.rewardText = this.add.text(this.scale.width / 2, 50, '', {
             fontSize: '24px',
@@ -87,6 +81,8 @@ class PlinkoGame extends Phaser.Scene {
     }
 
     dropBall() {
+        if (this.isBallDropped) return;  // Prevent multiple balls from dropping
+
         const ballRadius = 10;
         const ballX = this.scale.width / 2;
         const ballY = 50;
@@ -152,7 +148,7 @@ class PlinkoGame extends Phaser.Scene {
     }
 }
 
-const Game: React.FC<GameProps> = ({ wallet, program, betAmount, fetchPlayerBalance, isBetPlaced }) => {
+const Game: React.FC<GameProps> = ({ wallet, program, betAmount, fetchPlayerBalance, isBetPlaced, setIsBetPlaced }) => {
     const gameRef = useRef<Phaser.Game | null>(null);
 
     useEffect(() => {
@@ -180,6 +176,17 @@ const Game: React.FC<GameProps> = ({ wallet, program, betAmount, fetchPlayerBala
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (isBetPlaced) {
+            // Once the bet is placed, immediately drop the ball
+            const gameScene = gameRef.current?.scene.getScene('PlinkoGame') as PlinkoGame; // Explicitly cast to PlinkoGame
+            if (gameScene && !gameScene.isBallDropped) {
+                gameScene.dropBall();  // Trigger the ball drop
+                setIsBetPlaced(false); // Reset the bet status
+            }
+        }
+    }, [isBetPlaced]);
 
     return <div id="game-container" style={{ width: '100%', height: '100%' }} />;
 };
