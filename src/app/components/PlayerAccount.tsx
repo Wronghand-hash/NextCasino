@@ -5,23 +5,38 @@ import { useState } from 'react';
 import { useAnchorProgram } from '../utils/AnchorClient';
 import { BN, web3 } from '@coral-xyz/anchor';
 
-export const PlayerAccount = () => {
+interface PlayerAccountProps {
+    balance: number | null;
+    fetchPlayerBalance: () => Promise<void>;
+}
+
+export const PlayerAccount: React.FC<PlayerAccountProps> = ({ balance, fetchPlayerBalance }) => {
     const program = useAnchorProgram();
     const wallet = useWallet();
-    const [balance, setBalance] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
+    // Derive the PDA for the player account
+    const derivePlayerAccountPda = (): web3.PublicKey | null => {
+        if (!wallet.publicKey || !program) return null;
+        const [playerAccountPda] = web3.PublicKey.findProgramAddressSync(
+            [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
+            program.programId
+        );
+        return playerAccountPda;
+    };
+
     // Check if an account exists
-    const accountExists = async (connection: web3.Connection, publicKey: web3.PublicKey): Promise<boolean> => {
-        const accountInfo = await connection.getAccountInfo(publicKey);
+    const accountExists = async (publicKey: web3.PublicKey): Promise<boolean> => {
+        if (!program) return false;
+        const accountInfo = await program.provider.connection.getAccountInfo(publicKey);
         return accountInfo !== null;
     };
 
     // Initialize the player account
     const initializePlayer = async () => {
         if (!wallet.publicKey || !program) {
-            setError("Wallet not connected or program not loaded");
+            setError("Wallet not connected or program not loaded.");
             return;
         }
 
@@ -29,14 +44,14 @@ export const PlayerAccount = () => {
         setError(null);
 
         try {
-            // Derive the PDA for the player account
-            const [playerAccountPda] = web3.PublicKey.findProgramAddressSync(
-                [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
-                program.programId
-            );
+            const playerAccountPda = derivePlayerAccountPda();
+            if (!playerAccountPda) {
+                setError("Failed to derive player account PDA.");
+                return;
+            }
 
             // Check if the player account already exists
-            const playerAccountExists = await accountExists(program.provider.connection, playerAccountPda);
+            const playerAccountExists = await accountExists(playerAccountPda);
             if (playerAccountExists) {
                 setError("Player account already exists.");
                 return;
@@ -52,9 +67,8 @@ export const PlayerAccount = () => {
                 })
                 .rpc();
 
-            // Fetch the player account data
-            const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
-            setBalance(playerAccount.balance.toNumber());
+            // Fetch the updated balance after initialization
+            await fetchPlayerBalance();
             alert("Player account initialized successfully!");
         } catch (err) {
             console.error("Failed to initialize player account:", err);
@@ -64,33 +78,10 @@ export const PlayerAccount = () => {
         }
     };
 
-    // Fetch the player's balance
-    const fetchPlayerBalance = async () => {
-        if (!wallet.publicKey || !program) return;
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            const [playerAccountPda] = web3.PublicKey.findProgramAddressSync(
-                [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
-                program.programId
-            );
-
-            const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
-            setBalance(playerAccount.balance.toNumber());
-        } catch (err) {
-            console.error("Failed to fetch player balance:", err);
-            setError("Failed to fetch player balance. Please initialize your account.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     // Close the player account
     const closePlayerAccount = async () => {
         if (!wallet.publicKey || !program) {
-            setError("Wallet not connected or program not loaded");
+            setError("Wallet not connected or program not loaded.");
             return;
         }
 
@@ -98,10 +89,11 @@ export const PlayerAccount = () => {
         setError(null);
 
         try {
-            const [playerAccountPda] = web3.PublicKey.findProgramAddressSync(
-                [Buffer.from('player_account'), wallet.publicKey.toBuffer()],
-                program.programId
-            );
+            const playerAccountPda = derivePlayerAccountPda();
+            if (!playerAccountPda) {
+                setError("Failed to derive player account PDA.");
+                return;
+            }
 
             // Close the player account
             await program.methods
@@ -112,7 +104,8 @@ export const PlayerAccount = () => {
                 })
                 .rpc();
 
-            setBalance(null);
+            // Fetch the updated balance after closing the account
+            await fetchPlayerBalance();
             alert("Player account closed successfully!");
         } catch (err) {
             console.error("Failed to close player account:", err);
@@ -161,14 +154,18 @@ const styles = {
         borderRadius: '8px',
         backgroundColor: '#f9f9f9',
         marginBottom: '20px',
+        maxWidth: '400px',
+        margin: '0 auto',
     },
     title: {
         fontSize: '24px',
         marginBottom: '16px',
         color: '#333',
+        textAlign: 'center' as const, // Explicitly set to 'center'
     },
     buttonGroup: {
         display: 'flex',
+        flexDirection: 'column' as const, // Explicitly set to 'column'
         gap: '10px',
         marginBottom: '16px',
     },
@@ -180,13 +177,17 @@ const styles = {
         borderRadius: '4px',
         cursor: 'pointer',
         fontSize: '14px',
+        textAlign: 'center' as const, // Explicitly set to 'center'
+        width: '100%',
     },
     balance: {
         fontSize: '18px',
         color: '#333',
+        textAlign: 'center' as const, // Explicitly set to 'center'
     },
     error: {
         color: 'red',
         fontSize: '14px',
+        textAlign: 'center' as const, // Explicitly set to 'center'
     },
 };

@@ -5,7 +5,11 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAnchorProgram } from '../utils/AnchorClient';
 
-const DepositFunds: React.FC = () => {
+interface DepositFundsProps {
+    fetchPlayerBalance: () => Promise<void>; // Add fetchPlayerBalance prop
+}
+
+const DepositFunds: React.FC<DepositFundsProps> = ({ fetchPlayerBalance }) => {
     const { publicKey } = useWallet();
     const program = useAnchorProgram();
     const [amount, setAmount] = useState<string>('');
@@ -51,6 +55,9 @@ const DepositFunds: React.FC = () => {
 
             toast.success(`Deposit successful! Transaction: ${tx}`);
             setAmount('');
+
+            // Refresh the player's balance after deposit
+            await fetchPlayerBalance();
         } catch (error) {
             console.error('Deposit failed:', error);
             toast.error(`Deposit failed: ${error instanceof Error ? error.message : 'Unknown error'}`);

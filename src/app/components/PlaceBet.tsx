@@ -4,17 +4,33 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { useAnchorProgram } from "../utils/AnchorClient";
 import { BN, web3 } from "@coral-xyz/anchor";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Game from "./Game"; // Import the Game component
 
-export const PlaceBet = () => {
+interface PlaceBetProps {
+    betAmount: number;
+    setBetAmount: (amount: number) => void;
+    fetchPlayerBalance: () => Promise<void>;
+    isBetPlaced: boolean;
+    setIsBetPlaced: (isPlaced: boolean) => void;
+}
+
+export const PlaceBet: React.FC<PlaceBetProps> = ({
+    betAmount,
+    setBetAmount,
+    fetchPlayerBalance,
+    isBetPlaced,
+    setIsBetPlaced,
+}) => {
     const program = useAnchorProgram();
     const wallet = useWallet();
-    const [betAmount, setBetAmount] = useState<number>(10);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [playerBalance, setPlayerBalance] = useState<number | null>(null);
 
     // Fetch player balance
-    const fetchPlayerBalance = async () => {
+    const fetchPlayerBalanceLocal = async () => {
         if (!wallet.publicKey || !program) return;
 
         const [playerAccountPda] = web3.PublicKey.findProgramAddressSync(
@@ -31,12 +47,6 @@ export const PlaceBet = () => {
         }
     };
 
-    // Check if an account exists
-    const accountExists = async (connection: web3.Connection, publicKey: web3.PublicKey): Promise<boolean> => {
-        const accountInfo = await connection.getAccountInfo(publicKey);
-        return accountInfo !== null;
-    };
-
     // Initialize the player account
     const initializePlayer = async () => {
         if (!wallet.publicKey || !program) {
@@ -50,13 +60,6 @@ export const PlaceBet = () => {
                 program.programId
             );
 
-            // Check if the player account already exists
-            const playerAccountExists = await accountExists(program.provider.connection, playerAccountPda);
-            if (playerAccountExists) {
-                setError("Player account already exists.");
-                return;
-            }
-
             // Initialize the player account with an initial balance
             await program.methods
                 .initializePlayer(new BN(1000)) // Initial balance of 1000
@@ -68,49 +71,12 @@ export const PlaceBet = () => {
                 .rpc();
 
             setError(null); // Clear any previous errors
-            alert("Player account initialized!");
+            toast.success("Player account initialized!");
             await fetchPlayerBalance();
         } catch (err) {
             console.error("Failed to initialize player account:", err);
             setError("Failed to initialize player account.");
-        }
-    };
-
-    // Initialize the game account
-    const initializeGame = async () => {
-        if (!wallet.publicKey || !program) {
-            setError("Wallet not connected or program not loaded");
-            return;
-        }
-
-        try {
-            const [gameAccountPda] = web3.PublicKey.findProgramAddressSync(
-                [Buffer.from("game_account"), wallet.publicKey.toBuffer()],
-                program.programId
-            );
-
-            // Check if the game account already exists
-            const gameAccountExists = await accountExists(program.provider.connection, gameAccountPda);
-            if (gameAccountExists) {
-                setError("Game account already exists.");
-                return;
-            }
-
-            // Initialize the game account with an initial balance
-            await program.methods
-                .initializeGame(new BN(1000)) // Initial balance of 1000
-                .accounts({
-                    gameAccount: gameAccountPda,
-                    player: wallet.publicKey,
-                    systemProgram: web3.SystemProgram.programId,
-                })
-                .rpc();
-
-            setError(null); // Clear any previous errors
-            alert("Game account initialized!");
-        } catch (err) {
-            console.error("Failed to initialize game account:", err);
-            setError("Failed to initialize game account.");
+            toast.error("Failed to initialize player account.");
         }
     };
 
@@ -118,16 +84,19 @@ export const PlaceBet = () => {
     const placeBet = async () => {
         if (!wallet.connected || !wallet.publicKey) {
             setError("Please connect your wallet first.");
+            toast.error("Please connect your wallet first.");
             return;
         }
 
         if (!program) {
             setError("Program not loaded. Please try again.");
+            toast.error("Program not loaded. Please try again.");
             return;
         }
 
         if (betAmount <= 0) {
             setError("Bet amount must be greater than 0.");
+            toast.error("Bet amount must be greater than 0.");
             return;
         }
 
@@ -145,15 +114,23 @@ export const PlaceBet = () => {
                 program.programId
             );
 
-            // Ensure game account is initialized
-            const gameAccountExists = await accountExists(program.provider.connection, gameAccountPda);
-            if (!gameAccountExists) {
-                setError("Game account not initialized. Please initialize your game first.");
-                return;
+            // Check if the game account exists
+            const gameAccountInfo = await program.provider.connection.getAccountInfo(gameAccountPda);
+            if (!gameAccountInfo) {
+                // Initialize the game account if it doesn't exist
+                await program.methods
+                    .initializeGame(new BN(1000)) // Initial balance of 1000
+                    .accounts({
+                        gameAccount: gameAccountPda,
+                        player: wallet.publicKey,
+                        systemProgram: web3.SystemProgram.programId,
+                    })
+                    .rpc();
+                toast.success("Game account initialized!");
             }
 
             // Place the bet
-            await program.methods
+            const tx = await program.methods
                 .placeBet(new BN(betAmount))
                 .accounts({
                     playerAccount: playerAccountPda,
@@ -163,52 +140,14 @@ export const PlaceBet = () => {
                 })
                 .rpc();
 
+            console.log("Transaction:", tx);
+            toast.success(`Bet placed successfully! Transaction: ${tx}`);
+            setIsBetPlaced(true); // Set bet placed to true
             await fetchPlayerBalance();
-            alert("Bet placed successfully!");
         } catch (err) {
             console.error("Failed to place bet:", err);
             setError("Failed to place bet. Please check your balance and try again.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Determine the result of the game
-    const determineResult = async (result: boolean) => {
-        if (!wallet.connected || !wallet.publicKey || !program) {
-            setError("Please connect your wallet first.");
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            const [gameAccountPda] = web3.PublicKey.findProgramAddressSync(
-                [Buffer.from("game_account"), wallet.publicKey.toBuffer()],
-                program.programId
-            );
-
-            const [playerAccountPda] = web3.PublicKey.findProgramAddressSync(
-                [Buffer.from("player_account"), wallet.publicKey.toBuffer()],
-                program.programId
-            );
-
-            // Determine the result
-            await program.methods
-                .determineResult(result)
-                .accounts({
-                    gameAccount: gameAccountPda,
-                    playerAccount: playerAccountPda,
-                    player: wallet.publicKey,
-                })
-                .rpc();
-
-            await fetchPlayerBalance();
-            alert(`Game result determined: ${result ? "Win" : "Loss"}`);
-        } catch (err) {
-            console.error("Failed to determine result:", err);
-            setError("Failed to determine result. Please try again.");
+            toast.error(`Failed to place bet: ${err instanceof Error ? err.message : "Unknown error"}`);
         } finally {
             setLoading(false);
         }
@@ -245,30 +184,23 @@ export const PlaceBet = () => {
                 >
                     Initialize Player
                 </button>
-                <button
-                    onClick={initializeGame}
-                    disabled={loading || !wallet.connected}
-                    style={styles.button}
-                >
-                    Initialize Game
-                </button>
-                <button
-                    onClick={() => determineResult(true)}
-                    disabled={loading || !wallet.connected}
-                    style={styles.button}
-                >
-                    Simulate Win
-                </button>
-                <button
-                    onClick={() => determineResult(false)}
-                    disabled={loading || !wallet.connected}
-                    style={styles.button}
-                >
-                    Simulate Loss
-                </button>
             </div>
             {error && <p style={styles.error}>{error}</p>}
             {playerBalance !== null && <p style={styles.balance}>Your Balance: {playerBalance}</p>}
+
+            {/* Render the Game component */}
+            {isBetPlaced && (
+                <Game
+                    betAmount={betAmount}
+                    wallet={wallet}
+                    program={program}
+                    fetchPlayerBalance={fetchPlayerBalance}
+                    isBetPlaced={isBetPlaced}
+                />
+            )}
+
+            {/* Toast notifications */}
+            <ToastContainer />
         </div>
     );
 };
@@ -285,6 +217,7 @@ const styles = {
         fontSize: '24px',
         marginBottom: '16px',
         color: '#333',
+        textAlign: 'center' as const, // Explicitly set to 'center'
     },
     inputGroup: {
         display: 'flex',
@@ -318,9 +251,11 @@ const styles = {
     balance: {
         fontSize: '18px',
         color: '#333',
+        textAlign: 'center' as const, // Explicitly set to 'center'
     },
     error: {
         color: 'red',
         fontSize: '14px',
+        textAlign: 'center' as const, // Explicitly set to 'center'
     },
 };
