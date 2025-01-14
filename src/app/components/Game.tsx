@@ -16,7 +16,7 @@ class PlinkoGame extends Phaser.Scene {
 
     create() {
         // Set a retro background color
-        this.cameras.main.setBackgroundColor(0x1a1a1a);
+        this.cameras.main.setBackgroundColor(0x000033); // Dark blue background
 
         // Create pegs in a pyramid pattern
         const pegs: Phaser.GameObjects.Arc[] = [];
@@ -30,7 +30,7 @@ class PlinkoGame extends Phaser.Scene {
             for (let col = 0; col < cols; col++) {
                 const x = offsetX + (col - (cols - 1) / 2) * spacing; // Center pegs horizontally
                 const y = offsetY + row * spacing;
-                const peg = this.add.circle(x, y, 8, 0xff00ff); // Neon pink pegs
+                const peg = this.add.circle(x, y, 6, 0xffffff); // White pegs
                 this.matter.add.gameObject(peg, { isStatic: true }); // Make pegs static
                 pegs.push(peg);
             }
@@ -43,8 +43,8 @@ class PlinkoGame extends Phaser.Scene {
         const zoneY = this.scale.height - 50; // Bottom of the screen
 
         // Add reward zones with multipliers
-        const multipliers = [1.5, 2, 3, 5, 3, 2, 1.5]; // Multipliers for each zone
-        const zoneColors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x00ffff, 0x0000ff, 0x8b00ff]; // Retro rainbow colors
+        const multipliers = [8.9, 3, 1.4, 1.1, 1, 0.5, 1, 1.1, 1.4, 3, 8.9]; // Multipliers for each zone
+        const zoneColors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x00ffff, 0x0000ff, 0x8b00ff, 0x00ff00, 0xffff00, 0xff7f00, 0xff0000]; // Retro rainbow colors
         for (let i = 0; i < multipliers.length; i++) {
             const x = offsetX + (i - (multipliers.length - 1) / 2) * zoneWidth;
             const zone = this.add.rectangle(x, zoneY, zoneWidth, zoneHeight, zoneColors[i], 0.7); // Retro-colored zones with transparency
@@ -76,12 +76,12 @@ class PlinkoGame extends Phaser.Scene {
 
     dropBall() {
         // Create a new ball
-        const ballRadius = 15;
+        const ballRadius = 10;
         const ballX = this.scale.width / 2; // Center of the screen horizontally
         const ballY = 50; // Top of the screen
 
         // Create a visual representation of the ball using an Arc
-        const ballVisual = this.add.circle(ballX, ballY, ballRadius, 0x00ffff); // Cyan ball
+        const ballVisual = this.add.circle(ballX, ballY, ballRadius, 0xff0000); // Red ball
 
         // Create a Matter.js body for the ball
         const ballBody = this.matter.add.circle(ballX, ballY, ballRadius, {
@@ -106,7 +106,7 @@ class PlinkoGame extends Phaser.Scene {
                 const ballY = ball.y;
                 const zoneWidth = 80;
                 const offsetX = this.scale.width / 2;
-                const multipliers = [1.5, 2, 3, 5, 3, 2, 1.5];
+                const multipliers = [8.9, 3, 1.4, 1.1, 1, 0.5, 1, 1.1, 1.4, 3, 8.9];
 
                 for (let i = 0; i < multipliers.length; i++) {
                     const zoneX = offsetX + (i - (multipliers.length - 1) / 2) * zoneWidth;
