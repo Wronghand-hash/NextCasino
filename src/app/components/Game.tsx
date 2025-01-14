@@ -4,15 +4,14 @@ import React from 'react';
 class PlinkoGame extends Phaser.Scene {
     private balls: Phaser.Physics.Matter.Image[] = []; // Array to store multiple balls
     private isBallDropped: boolean = false; // Track if a ball is currently in motion
-    private rewardText!: Phaser.GameObjects.BitmapText; // BitmapText to display the reward
+    private rewardText!: Phaser.GameObjects.Text; // Text to display the reward
 
     constructor() {
         super({ key: 'PlinkoGame' });
     }
 
     preload() {
-        // Load a retro-style pixel font
-        this.load.bitmapFont('retroFont', 'fonts/retroFont.png', 'fonts/retroFont.fnt');
+        // No need to load external images or fonts
     }
 
     create() {
@@ -52,8 +51,12 @@ class PlinkoGame extends Phaser.Scene {
             this.matter.add.gameObject(zone, { isStatic: true, isSensor: true }); // Make zones static and non-collidable
             rewardZones.push(zone);
 
-            // Display multiplier text in retro font
-            this.add.bitmapText(x, zoneY - 10, 'retroFont', `${multipliers[i]}x`, 16).setOrigin(0.5);
+            // Display multiplier text using default text rendering
+            this.add.text(x, zoneY - 10, `${multipliers[i]}x`, {
+                fontSize: '16px',
+                color: '#ffffff',
+                fontFamily: 'Arial',
+            }).setOrigin(0.5);
         }
 
         // Enable input for dropping balls
@@ -64,7 +67,11 @@ class PlinkoGame extends Phaser.Scene {
         });
 
         // Text to display the reward
-        this.rewardText = this.add.bitmapText(this.scale.width / 2, 50, 'retroFont', '', 24).setOrigin(0.5);
+        this.rewardText = this.add.text(this.scale.width / 2, 50, '', {
+            fontSize: '24px',
+            color: '#ffffff',
+            fontFamily: 'Arial',
+        }).setOrigin(0.5);
     }
 
     dropBall() {
