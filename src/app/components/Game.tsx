@@ -27,15 +27,17 @@ export const Game: React.FC<GameProps> = ({
   const ballRadius = 10; // Radius of the ball
   const gravity = 0.5; // Gravity effect
   const friction = 0.7; // Friction effect
-  const rows = 8; // Number of rows in the pyramid
+  const rows = 6; // Total number of rows in the pyramid
 
-  // Define the pegs
+  // Define the pegs, skipping the first 2 rows
   const pegs = Array.from({ length: rows }, (_, row) =>
     Array.from({ length: row + 1 }, (_, col) => ({
       x: 50 + (col - row / 2) * 10,
-      y: (row + 1) * 10,
+      y: (row + 1) * 10, // Adjust y-position to start lower
     }))
-  ).flat();
+  )
+    .slice(2) // Skip the first 2 rows
+    .flat();
 
   // Function to check collision between ball and pegs
   const checkCollision = (pegX: number, pegY: number) => {
@@ -83,7 +85,7 @@ export const Game: React.FC<GameProps> = ({
 
     // Update ball position
     setBallPosition((prev) => {
-      const newPosition = { x: prev.x + ballVelocity.x, y: prev.y + ballVelocity.y };
+      let newPosition = { x: prev.x + ballVelocity.x, y: prev.y + ballVelocity.y };
 
       // Check for collisions with each peg when ball is moving downward
       if (newPosition.y < 100 - ballRadius) {
@@ -93,8 +95,12 @@ export const Game: React.FC<GameProps> = ({
       }
 
       // Check for wall collisions
-      if (newPosition.x < ballRadius || newPosition.x > 100 - ballRadius) {
-        setBallVelocity((prev) => ({ x: -prev.x * friction, y: prev.y }));
+      if (newPosition.x < ballRadius) {
+        newPosition.x = ballRadius;
+        setBallVelocity((prev) => ({ x: Math.abs(prev.x) * friction, y: prev.y }));
+      } else if (newPosition.x > 100 - ballRadius) {
+        newPosition.x = 100 - ballRadius;
+        setBallVelocity((prev) => ({ x: -Math.abs(prev.x) * friction, y: prev.y }));
       }
 
       return newPosition;
@@ -105,8 +111,8 @@ export const Game: React.FC<GameProps> = ({
       setIsDropping(false);
       setBallVelocity({ x: 0, y: 0 });
 
-      // Determine game result
-      const result = Math.random() > 0.5 ? "Win" : "Lose";
+      // Determine game result based on the final position of the ball
+      const result = determineResult(ballPosition.x);
       setGameResult(result);
       setIsBetPlaced(false); // Reset bet state after the ball is dropped
 
@@ -119,6 +125,19 @@ export const Game: React.FC<GameProps> = ({
 
       // Fetch updated player balance
       fetchPlayerBalance();
+    }
+  };
+
+  // Function to determine the result based on the final position of the ball
+  const determineResult = (finalX: number) => {
+    // Define the winning zones (e.g., 30% - 70% of the board width)
+    const winZoneStart = 30;
+    const winZoneEnd = 70;
+
+    if (finalX >= winZoneStart && finalX <= winZoneEnd) {
+      return "Win";
+    } else {
+      return "Lose";
     }
   };
 
