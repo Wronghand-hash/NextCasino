@@ -28,7 +28,12 @@ export const Game: React.FC<GameProps> = ({
       x: 50 + (col - row / 2) * 10, // Adjust x spacing
       y: (row + 1) * 10, // Adjust y spacing
     }))
-  ).flat();
+  )
+    .slice(2) // Skip the first two rows
+    .flat();
+
+  // Define the slots at the bottom with their respective multipliers
+  const slots = [8.9, 3, 14, 1.1, 1, 0.5, 1, 1.1, 14, 8, 8.9];
 
   // Handle ball drop and result
   useEffect(() => {
@@ -54,6 +59,11 @@ export const Game: React.FC<GameProps> = ({
 
           // Fetch updated player balance
           fetchPlayerBalance();
+
+          // Lock the game after the ball drops (deferred to next event loop tick)
+          setTimeout(() => {
+            setIsBetPlaced(false);
+          }, 0);
         }
 
         return { x: newX, y: newY };
@@ -61,14 +71,7 @@ export const Game: React.FC<GameProps> = ({
     }, 30);
 
     return () => clearInterval(interval); // Cleanup interval on unmount
-  }, [isDropping, betAmount, fetchPlayerBalance]);
-
-  // Lock the game after the ball drops
-  useEffect(() => {
-    if (!isDropping && gameResult !== null) {
-      setIsBetPlaced(false); // Lock the game after the ball drops
-    }
-  }, [isDropping, gameResult, setIsBetPlaced]);
+  }, [isDropping, betAmount, fetchPlayerBalance, setIsBetPlaced]);
 
   const dropBall = () => {
     if (!isBetPlaced) {
@@ -82,16 +85,16 @@ export const Game: React.FC<GameProps> = ({
   };
 
   return (
-    <div>
-      <h2>Plinko Game</h2>
+    <div style={styles.container}>
+      <h2 style={styles.title}>Plinko Game</h2>
       {/* Plinko Board (Always Visible) */}
-      <div style={{ position: "relative", width: "100%", height: "400px", overflow: "hidden" }} ref={plinkoBoardRef}>
+      <div style={styles.plinkoBoard} ref={plinkoBoardRef}>
         {/* Render pegs */}
         {pegs.map((peg, idx) => (
           <div
             key={idx}
             style={{
-              position: "absolute",
+              position: "absolute" as const, // Explicitly type as 'Position'
               top: `${peg.y}%`,
               left: `${peg.x}%`,
               width: "10px",
@@ -104,7 +107,7 @@ export const Game: React.FC<GameProps> = ({
         {/* Render ball */}
         <div
           style={{
-            position: "absolute",
+            position: "absolute" as const, // Explicitly type as 'Position'
             top: `${ballPosition.y}%`,
             left: `${ballPosition.x}%`,
             width: "20px",
@@ -117,26 +120,27 @@ export const Game: React.FC<GameProps> = ({
         />
       </div>
 
+      {/* Render slots at the bottom */}
+      <div style={styles.slotsContainer}>
+        {slots.map((slot, idx) => (
+          <div key={idx} style={styles.slot}>
+            {slot}
+          </div>
+        ))}
+      </div>
+
       {/* Drop Ball Button (Disabled Until Bet is Placed) */}
       <button
         onClick={dropBall}
         disabled={!isBetPlaced || isDropping} // Disable if no bet is placed or ball is dropping
-        style={{
-          padding: "10px 20px",
-          backgroundColor: isBetPlaced ? "#007bff" : "#ccc",
-          color: "#fff",
-          border: "none",
-          borderRadius: "4px",
-          cursor: isBetPlaced ? "pointer" : "not-allowed",
-          marginTop: "20px",
-        }}
+        style={styles.dropBallButton}
       >
         {isDropping ? "Dropping Ball..." : "Drop Ball"}
       </button>
 
       {/* Game Result */}
       {gameResult && (
-        <p style={{ marginTop: "20px", fontSize: "18px", color: gameResult === "Win" ? "green" : "red" }}>
+        <p style={styles.resultText}>
           Result: {gameResult}
         </p>
       )}
@@ -144,4 +148,62 @@ export const Game: React.FC<GameProps> = ({
       <ToastContainer />
     </div>
   );
+};
+
+const styles = {
+  container: {
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "100vh",
+    backgroundColor: "#1a1a1a",
+    color: "#ffffff",
+    padding: "20px",
+  },
+  title: {
+    fontSize: "2.5rem",
+    marginBottom: "20px",
+  },
+  plinkoBoard: {
+    position: "relative" as const, // Explicitly type as 'Position'
+    width: "100%",
+    height: "400px",
+    overflow: "hidden" as const,
+    backgroundColor: "#333",
+    borderRadius: "10px",
+    marginBottom: "20px",
+  },
+  slotsContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    width: "100%",
+    maxWidth: "600px",
+    marginBottom: "20px",
+  },
+  slot: {
+    flex: 1,
+    textAlign: "center" as const,
+    padding: "10px",
+    backgroundColor: "#444",
+    borderRadius: "5px",
+    margin: "0 5px",
+    color: "#fff",
+    fontSize: "14px",
+  },
+  dropBallButton: {
+    padding: "10px 20px",
+    backgroundColor: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "14px",
+    marginTop: "20px",
+  },
+  resultText: {
+    marginTop: "20px",
+    fontSize: "18px",
+    color: "#fff",
+  },
 };

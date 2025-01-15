@@ -50,14 +50,12 @@ export default function Home() {
             isBetPlaced={isBetPlaced}
             setIsBetPlaced={setIsBetPlaced}
           />
-          {isBetPlaced && (
-            <Game
-              betAmount={betAmount}
-              isBetPlaced={isBetPlaced}
-              setIsBetPlaced={setIsBetPlaced}
-              fetchPlayerBalance={fetchPlayerBalance}
-            />
-          )}
+          <Game
+            betAmount={betAmount}
+            isBetPlaced={isBetPlaced}
+            setIsBetPlaced={setIsBetPlaced}
+            fetchPlayerBalance={fetchPlayerBalance}
+          />
         </>
       ) : (
         <p style={styles.connectWalletMessage}>Please connect your wallet to start playing.</p>
