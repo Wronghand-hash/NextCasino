@@ -40,23 +40,27 @@ export default function Home() {
         <WalletMultiButton style={styles.walletButton} />
       </div>
       {connected ? (
-        <>
-          <PlayerAccount balance={playerBalance} fetchPlayerBalance={fetchPlayerBalance} />
-          <DepositFunds fetchPlayerBalance={fetchPlayerBalance} />
-          <PlaceBet
-            betAmount={betAmount}
-            setBetAmount={setBetAmount}
-            fetchPlayerBalance={fetchPlayerBalance}
-            isBetPlaced={isBetPlaced}
-            setIsBetPlaced={setIsBetPlaced}
-          />
-          <Game
-            betAmount={betAmount}
-            isBetPlaced={isBetPlaced}
-            setIsBetPlaced={setIsBetPlaced}
-            fetchPlayerBalance={fetchPlayerBalance}
-          />
-        </>
+        <div style={styles.content}>
+          <div style={styles.leftColumn}>
+            <PlayerAccount balance={playerBalance} fetchPlayerBalance={fetchPlayerBalance} />
+            <DepositFunds fetchPlayerBalance={fetchPlayerBalance} />
+            <PlaceBet
+              betAmount={betAmount}
+              setBetAmount={setBetAmount}
+              fetchPlayerBalance={fetchPlayerBalance}
+              isBetPlaced={isBetPlaced}
+              setIsBetPlaced={setIsBetPlaced}
+            />
+          </div>
+          <div style={styles.rightColumn}>
+            <Game
+              betAmount={betAmount}
+              isBetPlaced={isBetPlaced}
+              setIsBetPlaced={setIsBetPlaced}
+              fetchPlayerBalance={fetchPlayerBalance}
+            />
+          </div>
+        </div>
       ) : (
         <p style={styles.connectWalletMessage}>Please connect your wallet to start playing.</p>
       )}
@@ -69,15 +73,16 @@ const styles = {
     display: "flex",
     flexDirection: "column" as "column",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     minHeight: "100vh",
     backgroundColor: "#1a1a1a",
     color: "#ffffff",
     padding: "20px",
+    overflow: "hidden",
   },
   title: {
-    fontSize: "2.5rem",
-    marginBottom: "20px",
+    fontSize: "2rem",
+    marginBottom: "10px",
   },
   walletButtonContainer: {
     marginBottom: "20px",
@@ -86,12 +91,33 @@ const styles = {
     backgroundColor: "#4CAF50",
     color: "#ffffff",
     border: "none",
-    padding: "10px 20px",
+    padding: "8px 16px",
     borderRadius: "5px",
     cursor: "pointer",
+    fontSize: "0.9rem",
   },
   connectWalletMessage: {
-    fontSize: "1.2rem",
+    fontSize: "1rem",
     color: "#cccccc",
+    marginTop: "20px",
+  },
+  content: {
+    display: "flex",
+    flexDirection: "row" as "row", // Horizontal layout
+    gap: "20px", // Space between columns
+    width: "100%",
+    maxWidth: "1200px", // Limit width for better readability
+    justifyContent: "center", // Center the columns
+  },
+  leftColumn: {
+    display: "flex",
+    flexDirection: "column" as "column",
+    gap: "10px", // Space between components
+    width: "30%", // Smaller width for left column
+  },
+  rightColumn: {
+    display: "flex",
+    flexDirection: "column" as "column",
+    width: "60%", // Larger width for right column (Game component)
   },
 };
