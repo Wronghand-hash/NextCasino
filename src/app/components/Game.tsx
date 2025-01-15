@@ -22,7 +22,7 @@ export const Game: React.FC<GameProps> = ({
   const [ballPosition, setBallPosition] = useState<{ x: number; y: number }>({ x: 50, y: 0 });
   const plinkoBoardRef = useRef<HTMLDivElement>(null);
 
-  const rows = 8; // Number of rows in the Plinko board
+  const rows = 14; // Number of rows in the Plinko board
   const pegs = Array.from({ length: rows }, (_, row) =>
     Array.from({ length: row + 1 }, (_, col) => ({
       x: 50 + (col - row / 2) * 10, // Adjust x spacing
