@@ -5,10 +5,10 @@ import { PlayerAccount } from "./components/PlayerAccount";
 import { PlaceBet } from "./components/PlaceBet";
 import { useWallet } from "@solana/wallet-adapter-react";
 import DepositFunds from "./components/DepositFunds";
-import Game from "./components/Game";
 import { useState } from "react";
 import { useAnchorProgram } from "./utils/AnchorClient";
 import { PublicKey } from "@solana/web3.js";
+import { Game } from "./components/Game";
 
 export default function Home() {
   const { connected, wallet } = useWallet();
@@ -53,11 +53,10 @@ export default function Home() {
           {isBetPlaced && (
             <Game
               betAmount={betAmount}
-              wallet={wallet}
-              program={program}
+              isBetPlaced={isBetPlaced}
+              setIsBetPlaced={setIsBetPlaced}
               fetchPlayerBalance={fetchPlayerBalance}
-              setIsBetPlaced={setIsBetPlaced} // Reset bet state after ball drop
-              isBetPlaced={false}            />
+            />
           )}
         </>
       ) : (
