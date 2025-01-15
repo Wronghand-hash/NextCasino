@@ -25,15 +25,15 @@ export const Game: React.FC<GameProps> = ({
 
   const pegRadius = 5; // Radius of each peg
   const ballRadius = 10; // Radius of the ball
-  const gravity = 0.5; // Gravity effect
-  const friction = 0.7; // Friction effect
+  const gravity = 0.05; // Reduced gravity for slower movement
+  const friction = 0.98; // Reduced friction for more natural bouncing
   const rows = 6; // Total number of rows in the pyramid
 
   // Define the pegs, skipping the first 2 rows
   const pegs = Array.from({ length: rows }, (_, row) =>
     Array.from({ length: row + 1 }, (_, col) => ({
-      x: 50 + (col - row / 2) * 10,
-      y: (row + 1) * 10, // Adjust y-position to start lower
+      x: 50 + (col - row / 2) * 15,  // Adjust x spacing
+      y: (row + 1) * 10,  // Adjust y-position to start lower
     }))
   )
     .slice(2) // Skip the first 2 rows
@@ -46,55 +46,44 @@ export const Game: React.FC<GameProps> = ({
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < ballRadius + pegRadius) {
-      // Collision detected, change the ball's trajectory
-      const angle = Math.atan2(dy, dx);
-      const speed = Math.sqrt(ballVelocity.x * ballVelocity.x + ballVelocity.y * ballVelocity.y);
+      // Collision detected, calculate the normal vector
+      const normalX = dx / distance;
+      const normalY = dy / distance;
 
-      // Adjust ball velocity after collision
+      // Calculate the dot product of the velocity and the normal vector
+      const dotProduct = ballVelocity.x * normalX + ballVelocity.y * normalY;
+
+      // Reflect the ball's velocity using the normal vector
       setBallVelocity((prev) => ({
-        x: prev.x + Math.cos(angle) * speed * friction,
-        y: prev.y + Math.sin(angle) * speed * friction,
+        x: prev.x - 2 * dotProduct * normalX * friction,
+        y: prev.y - 2 * dotProduct * normalY * friction,
+      }));
+
+      // Ensure the ball doesn't get stuck in the peg
+      setBallPosition((prev) => ({
+        x: prev.x - normalX * (ballRadius + pegRadius - distance),
+        y: prev.y - normalY * (ballRadius + pegRadius - distance),
       }));
     }
-  };
-
-  // Function to render the Plinko pyramid
-  const renderPlinkoPyramid = () => {
-    return pegs.map((peg, idx) => (
-      <div
-        key={idx}
-        style={{
-          position: "absolute",
-          top: `${peg.y}%`,
-          left: `${peg.x}%`,
-          width: `${pegRadius * 2}px`,
-          height: `${pegRadius * 2}px`,
-          backgroundColor: "#fff",
-          borderRadius: "50%",
-        }}
-      />
-    ));
   };
 
   // Function to update ball position and handle collisions
   const updateBallPosition = () => {
     if (!plinkoBoardRef.current) return;
 
-    // Apply gravity
+    // Apply gravity to the y-velocity
     setBallVelocity((prev) => ({ x: prev.x, y: prev.y + gravity }));
 
-    // Update ball position
+    // Update ball position based on velocity
     setBallPosition((prev) => {
       let newPosition = { x: prev.x + ballVelocity.x, y: prev.y + ballVelocity.y };
 
-      // Check for collisions with each peg when ball is moving downward
-      if (newPosition.y < 100 - ballRadius) {
-        pegs.forEach((peg) => {
-          checkCollision(peg.x, peg.y);
-        });
-      }
+      // Check for collisions with each peg
+      pegs.forEach((peg) => {
+        checkCollision(peg.x, peg.y);
+      });
 
-      // Check for wall collisions
+      // Check for wall collisions (left and right boundaries)
       if (newPosition.x < ballRadius) {
         newPosition.x = ballRadius;
         setBallVelocity((prev) => ({ x: Math.abs(prev.x) * friction, y: prev.y }));
@@ -107,7 +96,7 @@ export const Game: React.FC<GameProps> = ({
     });
 
     // Stop the ball when it reaches the bottom
-    if (ballPosition.y >= 100 - ballRadius) {
+    if (ballPosition.y >= 90) { // Allow a small margin at the bottom
       setIsDropping(false);
       setBallVelocity({ x: 0, y: 0 });
 
@@ -176,84 +165,45 @@ export const Game: React.FC<GameProps> = ({
   };
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>Plinko Game</h2>
-      <div style={styles.gameArea}>
-        <div ref={plinkoBoardRef} style={styles.plinkoBoard}>
-          {/* Render the Plinko pyramid */}
-          {renderPlinkoPyramid()}
-          {/* Render the ball */}
+    <div>
+      <h2>Plinko Game</h2>
+      <div style={{ position: "relative", width: "100%", height: "400px", overflow: "hidden" }} ref={plinkoBoardRef}>
+        {/* Render the Plinko pyramid */}
+        {pegs.map((peg, idx) => (
           <div
+            key={idx}
             style={{
-              ...styles.ball,
-              top: `${ballPosition.y}%`,
-              left: `${ballPosition.x}%`,
+              position: "absolute",
+              top: `${peg.y}%`,
+              left: `${peg.x}%`,
+              width: `${pegRadius * 2}px`,
+              height: `${pegRadius * 2}px`,
+              backgroundColor: "#fff",
+              borderRadius: "50%",
+              zIndex: 1,
             }}
-          ></div>
-        </div>
-        <button
-          onClick={dropBall}
-          disabled={isDropping || !isBetPlaced}
-          style={styles.button}
-        >
-          {isDropping ? "Dropping Ball..." : "Drop Ball"}
-        </button>
-        {gameResult && <p style={styles.result}>Result: {gameResult}</p>}
+          />
+        ))}
+        {/* Render the ball */}
+        <div
+          style={{
+            position: "absolute",
+            top: `${ballPosition.y}%`,
+            left: `${ballPosition.x}%`,
+            width: `${ballRadius * 2}px`,
+            height: `${ballRadius * 2}px`,
+            backgroundColor: "red",
+            borderRadius: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 2,
+          }}
+        />
       </div>
+      <button onClick={dropBall} disabled={isDropping || !isBetPlaced}>
+        {isDropping ? "Dropping Ball..." : "Drop Ball"}
+      </button>
+      {gameResult && <p>Result: {gameResult}</p>}
       <ToastContainer />
     </div>
   );
-};
-
-const styles = {
-  container: {
-    padding: "20px",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    backgroundColor: "#f9f9f9",
-    marginBottom: "20px",
-  },
-  title: {
-    fontSize: "24px",
-    marginBottom: "16px",
-    color: "#333",
-    textAlign: "center" as const,
-  },
-  gameArea: {
-    display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
-  },
-  plinkoBoard: {
-    width: "300px",
-    height: "400px",
-    backgroundColor: "#333",
-    position: "relative" as const,
-    overflow: "hidden",
-  },
-  ball: {
-    width: "20px",
-    height: "20px",
-    backgroundColor: "red",
-    borderRadius: "50%",
-    position: "absolute" as const,
-    transform: "translate(-50%, -50%)",
-    transition: "top 0.1s linear, left 0.1s linear",
-  },
-  button: {
-    padding: "10px 20px",
-    backgroundColor: "#007bff",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    fontSize: "14px",
-    marginTop: "20px",
-  },
-  result: {
-    fontSize: "18px",
-    color: "#333",
-    textAlign: "center" as const,
-    marginTop: "20px",
-  },
 };
