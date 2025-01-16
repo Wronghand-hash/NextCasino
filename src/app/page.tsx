@@ -27,7 +27,7 @@ const Home = () => {
 
     try {
       const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
-      setPlayerBalance(playerAccount.balance.toNumber());
+      setPlayerBalance(playerAccount.balance.toNumber()); // Ensure `balance` field exists in `PlayerAccount`
     } catch (err) {
       console.error("Failed to fetch player balance:", err);
     }
@@ -39,7 +39,7 @@ const Home = () => {
       <div style={styles.walletButtonContainer}>
         <WalletMultiButton style={styles.walletButton} />
       </div>
-      {connected ? (
+      {connected && program ? (
         <div style={styles.content}>
           <div style={styles.leftColumn}>
             <PlayerAccount
@@ -56,9 +56,9 @@ const Home = () => {
               setBetAmount={setBetAmount}
               isBetPlaced={isBetPlaced}
               setIsBetPlaced={setIsBetPlaced}
-              program={program} fetchPlayerBalance={function (): Promise<void> {
-                throw new Error("Function not implemented.");
-              } }            />
+              program={program}
+              fetchPlayerBalance={fetchPlayerBalance} // Pass the actual function
+            />
           </div>
           <div style={styles.rightColumn}>
             <Game
@@ -77,7 +77,7 @@ const Home = () => {
   );
 };
 
-export default Home; // Ensure default export
+export default Home;
 
 const styles = {
   container: {

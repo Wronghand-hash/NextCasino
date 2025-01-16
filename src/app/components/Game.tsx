@@ -40,7 +40,7 @@ export const Game: React.FC<GameProps> = ({
     .flat();
 
   // Define the slots at the bottom with their respective multipliers
-  const slots = [8.9, 3, 14, 1.1, 1, 0.5, 1, 1.1, 14, 8, 8.9];
+  const slots = [8.9, 3, 14, 1.1, 1, 1.1, 1, 1.1, 14, 8, 8.9]; // Adjusted to include more winning slots
 
   // Calculate the slot index based on the ball's final x position
   const getSlotIndex = (x: number): number => {
@@ -55,14 +55,32 @@ export const Game: React.FC<GameProps> = ({
     const interval = setInterval(() => {
       setBallPosition((prev) => {
         const newY = prev.y + 2; // Move ball down
-        const newX = prev.x + (Math.random() - 0.5) * 4; // Random horizontal movement
+        // Bias the ball's horizontal movement towards higher multiplier slots
+        const bias = Math.random() < 0.8 ? 0.3 : -0.3; // 80% chance to move right
+        const newX = prev.x + (Math.random() - 0.5 + bias) * 4; // Biased random movement
 
         if (newY >= 90) {
           clearInterval(interval);
           setIsDropping(false);
 
           // Determine the slot the ball landed in
-          const slotIndex = getSlotIndex(prev.x);
+          let slotIndex;
+          if (Math.random() < 0.8) {
+            // 80% chance to land on a winning slot
+            const winningSlots = slots
+              .map((multiplier, index) => ({ multiplier, index }))
+              .filter((slot) => slot.multiplier > 1);
+            const randomWinningSlot = winningSlots[Math.floor(Math.random() * winningSlots.length)];
+            slotIndex = randomWinningSlot.index;
+          } else {
+            // 20% chance to land on a losing slot
+            const losingSlots = slots
+              .map((multiplier, index) => ({ multiplier, index }))
+              .filter((slot) => slot.multiplier <= 1);
+            const randomLosingSlot = losingSlots[Math.floor(Math.random() * losingSlots.length)];
+            slotIndex = randomLosingSlot.index;
+          }
+
           const multiplier = slots[slotIndex];
 
           // Determine if the player wins or loses
@@ -87,7 +105,7 @@ export const Game: React.FC<GameProps> = ({
             );
 
             program.methods
-              .determineResult(new BN(multiplier * 1e9)) // Convert multiplier to lamports
+              .determineResult(new BN(multiplier * 1e9)) // Ensure multiplier is in lamports
               .accounts({
                 gameAccount: gameAccountPda,
                 player: publicKey,

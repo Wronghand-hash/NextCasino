@@ -17,7 +17,7 @@ type GameAccount = {
 };
 
 // Extend the Program type with custom accounts
-type CasinoPlinkoProgram = Program & {
+export type CasinoPlinkoProgram = Program & {
     account: {
         playerAccount: {
             fetch: (publicKey: web3.PublicKey) => Promise<PlayerAccount>;

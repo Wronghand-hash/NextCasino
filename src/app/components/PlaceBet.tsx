@@ -56,8 +56,12 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
       // Convert bet amount to lamports (1 SOL = 1,000,000,000 lamports)
       const lamports = Math.floor(betAmount * web3.LAMPORTS_PER_SOL);
 
+      // Debug the program object
+      console.log("Program:", program);
+      console.log("Program Methods:", program.methods);
+
       const tx = await program.methods
-        .placeBet(new BN(lamports))
+        .placeBet(new BN(lamports)) // Use `place_bet` (snake_case)
         .accounts({
           gameAccount: gameAccountPda,
           player: wallet.publicKey,
