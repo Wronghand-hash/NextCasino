@@ -26,6 +26,43 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
   const wallet = useWallet();
   const [loading, setLoading] = useState<boolean>(false);
 
+  const initializeGame = async () => {
+    if (!wallet.connected || !wallet.publicKey) {
+      toast.error("Please connect your wallet first.");
+      return;
+    }
+
+    if (!program) {
+      toast.error("Program not loaded. Please try again.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const [gameAccountPda] = web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("game_account"), wallet.publicKey.toBuffer()],
+        program.programId
+      );
+
+      const tx = await program.methods
+        .initializeGame()
+        .accounts({
+          gameAccount: gameAccountPda,
+          player: wallet.publicKey,
+          systemProgram: web3.SystemProgram.programId,
+        })
+        .rpc();
+
+      toast.success(`Game account initialized! Transaction: ${tx}`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Failed to initialize game account: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const placeBet = async () => {
     if (!wallet.connected || !wallet.publicKey) {
       toast.error("Please connect your wallet first.");
@@ -84,6 +121,13 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
             style={styles.slider}
           />
         </label>
+        <button
+          onClick={initializeGame}
+          disabled={loading || !wallet.connected}
+          style={styles.button}
+        >
+          {loading ? "Initializing Game..." : "Initialize Game"}
+        </button>
         <button
           onClick={placeBet}
           disabled={loading || !wallet.connected}
