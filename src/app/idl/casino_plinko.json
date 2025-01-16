@@ -74,6 +74,63 @@
       ]
     },
     {
+      "name": "initialize_game",
+      "docs": [
+        "Initialize the game account"
+      ],
+      "discriminator": [
+        44,
+        62,
+        102,
+        247,
+        126,
+        208,
+        130,
+        215
+      ],
+      "accounts": [
+        {
+          "name": "game_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  97,
+                  109,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initialize_player",
       "docs": [
         "Initialize the player account"
@@ -238,6 +295,19 @@
       ]
     },
     {
+      "name": "GameInitialized",
+      "discriminator": [
+        82,
+        221,
+        11,
+        2,
+        244,
+        52,
+        240,
+        250
+      ]
+    },
+    {
       "name": "PlayerInitialized",
       "discriminator": [
         214,
@@ -318,6 +388,22 @@
                 "name": "GameResult"
               }
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
