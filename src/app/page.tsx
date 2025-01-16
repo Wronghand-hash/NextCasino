@@ -56,8 +56,9 @@ const Home = () => {
               setBetAmount={setBetAmount}
               isBetPlaced={isBetPlaced}
               setIsBetPlaced={setIsBetPlaced}
-              program={program}
-            />
+              program={program} fetchPlayerBalance={function (): Promise<void> {
+                throw new Error("Function not implemented.");
+              } }            />
           </div>
           <div style={styles.rightColumn}>
             <Game

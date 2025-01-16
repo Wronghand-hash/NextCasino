@@ -2,7 +2,7 @@
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
-import { CasinoPlinkoProgram } from "../utils/AnchorClient"; // Import the correct program type
+import { CasinoPlinkoProgram } from "../utils/AnchorClient";
 import { web3 } from "@coral-xyz/anchor";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 interface PlayerAccountProps {
   balance: number | null;
   fetchPlayerBalance: () => Promise<void>;
-  program: CasinoPlinkoProgram | null; // Add program prop
+  program: CasinoPlinkoProgram | null;
 }
 
 export const PlayerAccount: React.FC<PlayerAccountProps> = ({

@@ -3,16 +3,17 @@
 import { useState, useEffect, useRef } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { CasinoPlinkoProgram } from "../utils/AnchorClient"; // Import the correct program type
-import { useWallet } from "@solana/wallet-adapter-react"; // Import useWallet
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { CasinoPlinkoProgram } from "../utils/AnchorClient";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { BN, web3 } from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
 
 interface GameProps {
   betAmount: number;
   isBetPlaced: boolean;
   setIsBetPlaced: (isPlaced: boolean) => void;
   fetchPlayerBalance: () => Promise<void>;
-  program: CasinoPlinkoProgram | null; // Add program prop
+  program: CasinoPlinkoProgram | null;
 }
 
 export const Game: React.FC<GameProps> = ({
@@ -22,7 +23,7 @@ export const Game: React.FC<GameProps> = ({
   fetchPlayerBalance,
   program,
 }) => {
-  const { connected, publicKey } = useWallet(); // Use useWallet to get the wallet
+  const { publicKey } = useWallet();
   const [isDropping, setIsDropping] = useState<boolean>(false);
   const [gameResult, setGameResult] = useState<string | null>(null);
   const [ballPosition, setBallPosition] = useState<{ x: number; y: number }>({ x: 50, y: 0 });
@@ -70,9 +71,9 @@ export const Game: React.FC<GameProps> = ({
 
           // Show toast message based on result
           if (result === "Win") {
-            toast.success(`You won! Multiplier: ${multiplier}x. Winnings: ${betAmount * multiplier} tokens.`);
+            toast.success(`You won! Multiplier: ${multiplier}x. Winnings: ${betAmount * multiplier} SOL.`);
           } else {
-            toast.error(`You lost! Multiplier: ${multiplier}x. Loss: ${betAmount} tokens.`);
+            toast.error(`You lost! Multiplier: ${multiplier}x. Loss: ${betAmount} SOL.`);
           }
 
           // Fetch updated player balance
@@ -86,11 +87,11 @@ export const Game: React.FC<GameProps> = ({
             );
 
             program.methods
-              .determineResult(multiplier)
+              .determineResult(new BN(multiplier * 1e9)) // Convert multiplier to lamports
               .accounts({
                 gameAccount: gameAccountPda,
                 player: publicKey,
-                systemProgram: SystemProgram.programId,
+                systemProgram: web3.SystemProgram.programId,
               })
               .rpc()
               .then(() => {
