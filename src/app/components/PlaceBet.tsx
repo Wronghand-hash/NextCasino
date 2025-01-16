@@ -17,7 +17,7 @@ interface PlaceBetProps {
   setIsBetPlaced: (isPlaced: boolean) => void;
   program: CasinoPlinkoProgram | null;
   fetchPlayerBalance: () => Promise<void>;
-  initializeGame: () => Promise<void>; // Add this line
+  initializeGame: () => Promise<void>;
 }
 
 export const PlaceBet: React.FC<PlaceBetProps> = ({
@@ -27,10 +27,38 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
   setIsBetPlaced,
   program,
   fetchPlayerBalance,
-  initializeGame, // Add this line
+  initializeGame,
 }) => {
   const wallet = useWallet();
   const [loading, setLoading] = useState<boolean>(false);
+
+  const resetGame = async () => {
+    if (!wallet.connected || !wallet.publicKey || !program) {
+      toast.error("Please connect your wallet and ensure the program is loaded.");
+      return;
+    }
+
+    try {
+      const [gameAccountPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("game_account"), wallet.publicKey.toBuffer()],
+        program.programId
+      );
+
+      const tx = await program.methods
+        .resetGame()
+        .accounts({
+          gameAccount: gameAccountPda,
+          player: wallet.publicKey,
+          systemProgram: web3.SystemProgram.programId,
+        })
+        .rpc();
+
+      toast.success(`Game reset! Transaction: ${tx}`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Failed to reset game: ${err.message}`);
+    }
+  };
 
   const placeBet = async () => {
     if (!wallet.connected || !wallet.publicKey) {
@@ -56,14 +84,24 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
         program.programId
       );
 
-      // Initialize the game account if it hasn't been initialized yet
+      let gameAccount;
       try {
-        await program.account.gameAccount.fetch(gameAccountPda);
+        // Try to fetch the game account
+        gameAccount = await program.account.gameAccount.fetch(gameAccountPda);
+        console.log("Game Account State:", gameAccount);
       } catch (err) {
-        // If the game account doesn't exist, initialize it
+        // If the game account does not exist, initialize it
+        console.log("Game account does not exist. Initializing...");
         await initializeGame();
+        gameAccount = await program.account.gameAccount.fetch(gameAccountPda);
       }
 
+      if (
+        gameAccount.bet_amount !== 0 ||
+        !(gameAccount.result as any).pending // Check for the "pending" key
+      ) {
+        await resetGame();
+      }
       // Convert bet amount to lamports (1 SOL = 1,000,000,000 lamports)
       const lamports = Math.floor(betAmount * web3.LAMPORTS_PER_SOL);
 
