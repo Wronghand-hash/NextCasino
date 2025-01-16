@@ -2,7 +2,7 @@
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
-import { useAnchorProgram } from "../utils/AnchorClient";
+import { CasinoPlinkoProgram } from "../utils/AnchorClient"; // Import the correct program type
 import { BN, web3 } from "@coral-xyz/anchor";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -14,6 +14,7 @@ interface PlaceBetProps {
   setBetAmount: (amount: number) => void;
   isBetPlaced: boolean;
   setIsBetPlaced: (isPlaced: boolean) => void;
+  program: CasinoPlinkoProgram | null; // Add program prop
 }
 
 export const PlaceBet: React.FC<PlaceBetProps> = ({
@@ -21,8 +22,8 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
   setBetAmount,
   isBetPlaced,
   setIsBetPlaced,
+  program,
 }) => {
-  const program = useAnchorProgram();
   const wallet = useWallet();
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -117,20 +118,20 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
             max={100}
             value={betAmount}
             onChange={(value) => setBetAmount(value as number)}
-            disabled={loading}
+            disabled={loading || isBetPlaced} // Disable slider if bet is already placed
             style={styles.slider}
           />
         </label>
         <button
           onClick={initializeGame}
-          disabled={loading || !wallet.connected}
+          disabled={loading || !wallet.connected || isBetPlaced} // Disable if bet is already placed
           style={styles.button}
         >
           {loading ? "Initializing Game..." : "Initialize Game"}
         </button>
         <button
           onClick={placeBet}
-          disabled={loading || !wallet.connected}
+          disabled={loading || !wallet.connected || isBetPlaced} // Disable if bet is already placed
           style={styles.button}
         >
           {loading ? "Placing Bet..." : "Place Bet"}

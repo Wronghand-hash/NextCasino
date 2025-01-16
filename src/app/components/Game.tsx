@@ -3,12 +3,16 @@
 import { useState, useEffect, useRef } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { CasinoPlinkoProgram } from "../utils/AnchorClient"; // Import the correct program type
+import { useWallet } from "@solana/wallet-adapter-react"; // Import useWallet
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 
 interface GameProps {
   betAmount: number;
   isBetPlaced: boolean;
   setIsBetPlaced: (isPlaced: boolean) => void;
   fetchPlayerBalance: () => Promise<void>;
+  program: CasinoPlinkoProgram | null; // Add program prop
 }
 
 export const Game: React.FC<GameProps> = ({
@@ -16,7 +20,9 @@ export const Game: React.FC<GameProps> = ({
   isBetPlaced,
   setIsBetPlaced,
   fetchPlayerBalance,
+  program,
 }) => {
+  const { connected, publicKey } = useWallet(); // Use useWallet to get the wallet
   const [isDropping, setIsDropping] = useState<boolean>(false);
   const [gameResult, setGameResult] = useState<string | null>(null);
   const [ballPosition, setBallPosition] = useState<{ x: number; y: number }>({ x: 50, y: 0 });
@@ -35,6 +41,12 @@ export const Game: React.FC<GameProps> = ({
   // Define the slots at the bottom with their respective multipliers
   const slots = [8.9, 3, 14, 1.1, 1, 0.5, 1, 1.1, 14, 8, 8.9];
 
+  // Calculate the slot index based on the ball's final x position
+  const getSlotIndex = (x: number): number => {
+    const slotWidth = 100 / slots.length; // Width of each slot in percentage
+    return Math.floor(x / slotWidth);
+  };
+
   // Handle ball drop and result
   useEffect(() => {
     if (!isDropping) return;
@@ -47,18 +59,48 @@ export const Game: React.FC<GameProps> = ({
         if (newY >= 90) {
           clearInterval(interval);
           setIsDropping(false);
-          const result = Math.random() > 0.5 ? "Win" : "Lose"; // Random result
+
+          // Determine the slot the ball landed in
+          const slotIndex = getSlotIndex(prev.x);
+          const multiplier = slots[slotIndex];
+
+          // Determine if the player wins or loses
+          const result = multiplier > 1 ? "Win" : "Lose";
           setGameResult(result);
 
           // Show toast message based on result
           if (result === "Win") {
-            toast.success(`You won! ${betAmount} tokens added to your balance.`);
+            toast.success(`You won! Multiplier: ${multiplier}x. Winnings: ${betAmount * multiplier} tokens.`);
           } else {
-            toast.error(`You lost! ${betAmount} tokens deducted from your balance.`);
+            toast.error(`You lost! Multiplier: ${multiplier}x. Loss: ${betAmount} tokens.`);
           }
 
           // Fetch updated player balance
           fetchPlayerBalance();
+
+          // Call the determine_result instruction if the player wins
+          if (result === "Win" && program && publicKey) {
+            const [gameAccountPda] = PublicKey.findProgramAddressSync(
+              [Buffer.from("game_account"), publicKey.toBuffer()],
+              program.programId
+            );
+
+            program.methods
+              .determineResult(multiplier)
+              .accounts({
+                gameAccount: gameAccountPda,
+                player: publicKey,
+                systemProgram: SystemProgram.programId,
+              })
+              .rpc()
+              .then(() => {
+                toast.success("Winnings transferred to your wallet!");
+              })
+              .catch((err: any) => {
+                console.error("Failed to determine result:", err);
+                toast.error(`Failed to transfer winnings: ${err.message}`);
+              });
+          }
 
           // Lock the game after the ball drops (deferred to next event loop tick)
           setTimeout(() => {
@@ -71,7 +113,7 @@ export const Game: React.FC<GameProps> = ({
     }, 30);
 
     return () => clearInterval(interval); // Cleanup interval on unmount
-  }, [isDropping, betAmount, fetchPlayerBalance, setIsBetPlaced]);
+  }, [isDropping, betAmount, fetchPlayerBalance, setIsBetPlaced, program, publicKey]);
 
   const dropBall = () => {
     if (!isBetPlaced) {
@@ -124,7 +166,7 @@ export const Game: React.FC<GameProps> = ({
       <div style={styles.slotsContainer}>
         {slots.map((slot, idx) => (
           <div key={idx} style={styles.slot}>
-            {slot}
+            {slot}x
           </div>
         ))}
       </div>

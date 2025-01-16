@@ -10,7 +10,7 @@ import { useAnchorProgram } from "./utils/AnchorClient";
 import { PublicKey } from "@solana/web3.js";
 import { Game } from "./components/Game";
 
-export default function Home() {
+const Home = () => {
   const { connected, wallet } = useWallet();
   const program = useAnchorProgram();
   const [betAmount, setBetAmount] = useState<number>(10);
@@ -42,14 +42,21 @@ export default function Home() {
       {connected ? (
         <div style={styles.content}>
           <div style={styles.leftColumn}>
-            <PlayerAccount balance={playerBalance} fetchPlayerBalance={fetchPlayerBalance} />
-            <DepositFunds fetchPlayerBalance={fetchPlayerBalance} />
+            <PlayerAccount
+              balance={playerBalance}
+              fetchPlayerBalance={fetchPlayerBalance}
+              program={program}
+            />
+            <DepositFunds
+              fetchPlayerBalance={fetchPlayerBalance}
+              program={program}
+            />
             <PlaceBet
               betAmount={betAmount}
               setBetAmount={setBetAmount}
-              fetchPlayerBalance={fetchPlayerBalance}
               isBetPlaced={isBetPlaced}
               setIsBetPlaced={setIsBetPlaced}
+              program={program}
             />
           </div>
           <div style={styles.rightColumn}>
@@ -58,6 +65,7 @@ export default function Home() {
               isBetPlaced={isBetPlaced}
               setIsBetPlaced={setIsBetPlaced}
               fetchPlayerBalance={fetchPlayerBalance}
+              program={program}
             />
           </div>
         </div>
@@ -66,7 +74,9 @@ export default function Home() {
       )}
     </div>
   );
-}
+};
+
+export default Home; // Ensure default export
 
 const styles = {
   container: {

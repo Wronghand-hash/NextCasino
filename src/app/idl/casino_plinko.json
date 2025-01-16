@@ -1,5 +1,5 @@
 {
-  "address": "4RJp8J1uenuegcb5QUZ7DV9QTxZV8kT6qE6ZXK6JdMG8",
+  "address": "3ZxgMfMN7tCtQRSysEDdC5Zr6xFer6vrsZdreZ5Vwm7P",
   "metadata": {
     "name": "casino_plinko",
     "version": "0.1.0",
@@ -10,7 +10,7 @@
     {
       "name": "determine_result",
       "docs": [
-        "Determine the result of the game with a multiplier"
+        "Determine the result of the game and transfer winnings to the player"
       ],
       "discriminator": [
         127,
@@ -56,17 +56,13 @@
           "name": "player",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
-        {
-          "name": "result",
-          "type": {
-            "defined": {
-              "name": "GameResult"
-            }
-          }
-        },
         {
           "name": "multiplier",
           "type": "u64"
@@ -349,6 +345,11 @@
       "code": 6002,
       "name": "Overflow",
       "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidGameState",
+      "msg": "Invalid game state"
     }
   ],
   "types": [
@@ -388,6 +389,10 @@
                 "name": "GameResult"
               }
             }
+          },
+          {
+            "name": "multiplier",
+            "type": "u64"
           }
         ]
       }
