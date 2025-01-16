@@ -1,5 +1,5 @@
 {
-  "address": "4RJp8J1uenuegcb5QUZ7DV9QTxZV8kT6qE6ZXK6JdMG8",
+  "address": "3JZkkN4euEXFVBuSvMNYMXze4gh1T5H9Nyx4cv3euqt5",
   "metadata": {
     "name": "casino_plinko",
     "version": "0.1.0",
@@ -350,6 +350,11 @@
       "code": 6003,
       "name": "InvalidGameState",
       "msg": "Invalid game state"
+    },
+    {
+      "code": 6004,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds in game account"
     }
   ],
   "types": [

@@ -8,6 +8,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
+import { PublicKey } from "@solana/web3.js";
 
 interface PlaceBetProps {
   betAmount: number;
@@ -16,6 +17,7 @@ interface PlaceBetProps {
   setIsBetPlaced: (isPlaced: boolean) => void;
   program: CasinoPlinkoProgram | null;
   fetchPlayerBalance: () => Promise<void>;
+  initializeGame: () => Promise<void>; // Add this line
 }
 
 export const PlaceBet: React.FC<PlaceBetProps> = ({
@@ -25,6 +27,7 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
   setIsBetPlaced,
   program,
   fetchPlayerBalance,
+  initializeGame, // Add this line
 }) => {
   const wallet = useWallet();
   const [loading, setLoading] = useState<boolean>(false);
@@ -48,17 +51,21 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
     setLoading(true);
 
     try {
-      const [gameAccountPda] = web3.PublicKey.findProgramAddressSync(
+      const [gameAccountPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("game_account"), wallet.publicKey.toBuffer()],
         program.programId
       );
 
+      // Initialize the game account if it hasn't been initialized yet
+      try {
+        await program.account.gameAccount.fetch(gameAccountPda);
+      } catch (err) {
+        // If the game account doesn't exist, initialize it
+        await initializeGame();
+      }
+
       // Convert bet amount to lamports (1 SOL = 1,000,000,000 lamports)
       const lamports = Math.floor(betAmount * web3.LAMPORTS_PER_SOL);
-
-      // Debug the program object
-      console.log("Program:", program);
-      console.log("Program Methods:", program.methods);
 
       const tx = await program.methods
         .placeBet(new BN(lamports)) // Use `place_bet` (snake_case)

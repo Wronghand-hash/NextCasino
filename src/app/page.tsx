@@ -9,6 +9,8 @@ import { useState } from "react";
 import { useAnchorProgram } from "./utils/AnchorClient";
 import { PublicKey } from "@solana/web3.js";
 import { Game } from "./components/Game";
+import { web3 } from "@coral-xyz/anchor";
+import { toast } from "react-toastify";
 
 const Home = () => {
   const { connected, wallet } = useWallet();
@@ -30,6 +32,31 @@ const Home = () => {
       setPlayerBalance(playerAccount.balance.toNumber()); // Ensure `balance` field exists in `PlayerAccount`
     } catch (err) {
       console.error("Failed to fetch player balance:", err);
+    }
+  };
+
+  const initializeGame = async () => {
+    if (!wallet?.adapter?.publicKey || !program) return;
+
+    const [gameAccountPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("game_account"), wallet.adapter.publicKey.toBuffer()],
+      program.programId
+    );
+
+    try {
+      const tx = await program.methods
+        .initializeGame()
+        .accounts({
+          gameAccount: gameAccountPda,
+          player: wallet.adapter.publicKey,
+          systemProgram: web3.SystemProgram.programId,
+        })
+        .rpc();
+
+      toast.success(`Game account initialized! Transaction: ${tx}`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Failed to initialize game account: ${err.message}`);
     }
   };
 
@@ -57,7 +84,8 @@ const Home = () => {
               isBetPlaced={isBetPlaced}
               setIsBetPlaced={setIsBetPlaced}
               program={program}
-              fetchPlayerBalance={fetchPlayerBalance} // Pass the actual function
+              fetchPlayerBalance={fetchPlayerBalance}
+              initializeGame={initializeGame} // Pass the initializeGame function
             />
           </div>
           <div style={styles.rightColumn}>
