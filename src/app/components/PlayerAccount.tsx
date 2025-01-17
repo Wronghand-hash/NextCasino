@@ -3,9 +3,10 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { CasinoPlinkoProgram } from "../utils/AnchorClient";
-import { web3 } from "@coral-xyz/anchor";
+import { BN, web3 } from "@coral-xyz/anchor";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { PublicKey } from "@solana/web3.js";
 
 interface PlayerAccountProps {
   balance: number | null;
@@ -21,36 +22,43 @@ export const PlayerAccount: React.FC<PlayerAccountProps> = ({
   const wallet = useWallet();
   const [loading, setLoading] = useState<boolean>(false);
 
-  const initializePlayer = async () => {
-    if (!wallet.publicKey || !program) {
-      toast.error("Wallet not connected or program not loaded.");
+  const initializeGame = async () => {
+    if (!wallet.connected || !wallet.publicKey) {
+      toast.error("Please connect your wallet first.");
       return;
     }
-
-    setLoading(true);
-
+  
+    if (!program) {
+      toast.error("Program not loaded. Please try again.");
+      return;
+    }
+  
     try {
-      const [playerAccountPda] = web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("player_account"), wallet.publicKey.toBuffer()],
+      // Derive the game account PDA with the correct seed and bump
+      const [gameAccountPda, gameAccountBump] = PublicKey.findProgramAddressSync(
+        [Buffer.from("global_game_account")], // Ensure this matches the seed in the Anchor program
         program.programId
       );
-
-      await program.methods
-        .initializePlayer()
+  
+      console.log("Game Account PDA:", gameAccountPda.toBase58());
+      console.log("Game Account Bump:", gameAccountBump);
+  
+      const initialFunding = 1 * web3.LAMPORTS_PER_SOL; // 1 SOL initial funding
+  
+      const tx = await program.methods
+        .initializeGame(new BN(initialFunding))
         .accounts({
-          playerAccount: playerAccountPda,
-          player: wallet.publicKey,
+          gameAccount: gameAccountPda,
+          payer: wallet.publicKey,
           systemProgram: web3.SystemProgram.programId,
         })
         .rpc();
-
-      toast.success("Player account initialized!");
-      await fetchPlayerBalance(); // Refresh balance after initialization
+  
+      console.log("Game Initialized! Transaction:", tx);
+      toast.success(`Game initialized! Transaction: ${tx}`);
     } catch (err: any) {
-      console.error("Initialization failed:", err);
-      toast.error(`Initialization failed: ${err.message}`);
-    } finally {
-      setLoading(false);
+      console.error("Error initializing game:", err);
+      toast.error(`Failed to initialize game: ${err.message}`);
     }
   };
 
@@ -64,7 +72,7 @@ export const PlayerAccount: React.FC<PlayerAccountProps> = ({
       </div>
       <div style={styles.buttonGroup}>
         <button
-          onClick={initializePlayer}
+          onClick={initializeGame}
           disabled={loading || !wallet.connected}
           style={styles.button}
         >

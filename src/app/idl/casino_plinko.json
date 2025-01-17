@@ -1,5 +1,5 @@
 {
-  "address": "EHKxr3iUZD6rvMZ2XaBSYxu76VC9FsYSDZzhKCbdU1jh",
+  "address": "2nA5CFiicnJb33pQQkJ5GGP2166CySwXSWFgRgRsG1DF",
   "metadata": {
     "name": "casino_plinko",
     "version": "0.1.0",
@@ -9,6 +9,9 @@
   "instructions": [
     {
       "name": "check_balance",
+      "docs": [
+        "Check the balance of the game account"
+      ],
       "discriminator": [
         73,
         83,
@@ -57,6 +60,9 @@
     },
     {
       "name": "determine_result",
+      "docs": [
+        "Determine the result of the game and transfer winnings to the player"
+      ],
       "discriminator": [
         127,
         255,
@@ -119,6 +125,9 @@
     },
     {
       "name": "initialize_game",
+      "docs": [
+        "Initialize the game account and fund it with SOL"
+      ],
       "discriminator": [
         44,
         62,
@@ -180,7 +189,69 @@
       ]
     },
     {
+      "name": "initialize_player",
+      "docs": [
+        "Initialize a player account"
+      ],
+      "discriminator": [
+        79,
+        249,
+        88,
+        177,
+        220,
+        62,
+        56,
+        128
+      ],
+      "accounts": [
+        {
+          "name": "player_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "place_bet",
+      "docs": [
+        "Place a bet using SOL from the player's wallet"
+      ],
       "discriminator": [
         222,
         62,
@@ -243,6 +314,9 @@
     },
     {
       "name": "reset_game",
+      "docs": [
+        "Reset the game account to its initial state"
+      ],
       "discriminator": [
         97,
         146,
@@ -300,6 +374,9 @@
     },
     {
       "name": "top_up_game_account",
+      "docs": [
+        "Top up the game account with additional funds"
+      ],
       "discriminator": [
         254,
         119,
@@ -374,6 +451,19 @@
         230,
         188
       ]
+    },
+    {
+      "name": "PlayerAccount",
+      "discriminator": [
+        224,
+        184,
+        224,
+        50,
+        98,
+        72,
+        48,
+        236
+      ]
     }
   ],
   "events": [
@@ -414,6 +504,19 @@
         128,
         127,
         240
+      ]
+    },
+    {
+      "name": "PlayerInitialized",
+      "discriminator": [
+        214,
+        37,
+        153,
+        142,
+        63,
+        109,
+        206,
+        15
       ]
     },
     {
@@ -547,6 +650,38 @@
           },
           {
             "name": "Loss"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
