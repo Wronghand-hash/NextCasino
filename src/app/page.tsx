@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useAnchorProgram } from "./utils/AnchorClient";
 import { PublicKey } from "@solana/web3.js";
 import { Game } from "./components/Game";
-import { web3 } from "@coral-xyz/anchor";
+import { BN, web3 } from "@coral-xyz/anchor";
 import { toast } from "react-toastify";
 
 const Home = () => {
@@ -36,7 +36,10 @@ const Home = () => {
   };
 
   const initializeGame = async () => {
-    if (!wallet?.adapter?.publicKey || !program) return;
+    if (!wallet?.adapter?.publicKey || !program) {
+      toast.error("Wallet not connected or program not loaded.");
+      return;
+    }
 
     const [gameAccountPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("game_account"), wallet.adapter.publicKey.toBuffer()],
@@ -44,8 +47,19 @@ const Home = () => {
     );
 
     try {
+      // Check if the game account already exists
+      try {
+        await program.account.gameAccount.fetch(gameAccountPda);
+        toast.info("Game account already exists.");
+        return;
+      } catch (err) {
+        console.log("Game account does not exist. Initializing...");
+      }
+
+      // Initialize the game account with some initial funding (e.g., 0.1 SOL)
+      const initialFunding = 0.1 * web3.LAMPORTS_PER_SOL; // 0.1 SOL in lamports
       const tx = await program.methods
-        .initializeGame()
+        .initializeGame(new BN(initialFunding)) // Pass initial funding as a BN
         .accounts({
           gameAccount: gameAccountPda,
           player: wallet.adapter.publicKey,
