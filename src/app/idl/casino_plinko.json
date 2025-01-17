@@ -9,9 +9,6 @@
   "instructions": [
     {
       "name": "check_balance",
-      "docs": [
-        "Check the balance of the game account"
-      ],
       "discriminator": [
         73,
         83,
@@ -60,9 +57,6 @@
     },
     {
       "name": "determine_result",
-      "docs": [
-        "Determine the result of the game and transfer winnings to the player"
-      ],
       "discriminator": [
         127,
         255,
@@ -125,9 +119,6 @@
     },
     {
       "name": "initialize_game",
-      "docs": [
-        "Initialize the game account and fund it with SOL"
-      ],
       "discriminator": [
         44,
         62,
@@ -190,9 +181,6 @@
     },
     {
       "name": "place_bet",
-      "docs": [
-        "Place a bet using SOL from the player's wallet"
-      ],
       "discriminator": [
         222,
         62,
@@ -255,9 +243,6 @@
     },
     {
       "name": "reset_game",
-      "docs": [
-        "Reset the game account to its initial state"
-      ],
       "discriminator": [
         97,
         146,
@@ -315,9 +300,6 @@
     },
     {
       "name": "top_up_game_account",
-      "docs": [
-        "Top up the game account with additional funds"
-      ],
       "discriminator": [
         254,
         119,

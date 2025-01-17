@@ -29,51 +29,44 @@ export const Game: React.FC<GameProps> = ({
   const [ballPosition, setBallPosition] = useState<{ x: number; y: number }>({ x: 50, y: 0 });
   const plinkoBoardRef = useRef<HTMLDivElement>(null);
 
-  const rows = 14; // Number of rows in the Plinko board
+  const rows = 14;
   const pegs = Array.from({ length: rows }, (_, row) =>
     Array.from({ length: row + 1 }, (_, col) => ({
-      x: 50 + (col - row / 2) * 10, // Adjust x spacing
-      y: (row + 1) * 10, // Adjust y spacing
+      x: 50 + (col - row / 2) * 10,
+      y: (row + 1) * 10,
     }))
   )
-    .slice(2) // Skip the first two rows
+    .slice(2)
     .flat();
 
-  // Define the slots at the bottom with their respective multipliers
-  const slots = [8.9, 3, 14, 1.1, 1, 1.1, 1, 1.1, 14, 8, 8.9]; // Adjusted to include more winning slots
+  const slots = [8.9, 3, 14, 1.1, 1, 1.1, 1, 1.1, 14, 8, 8.9];
 
-  // Calculate the slot index based on the ball's final x position
   const getSlotIndex = (x: number): number => {
-    const slotWidth = 100 / slots.length; // Width of each slot in percentage
+    const slotWidth = 100 / slots.length;
     return Math.floor(x / slotWidth);
   };
 
-  // Handle ball drop and result
   useEffect(() => {
     if (!isDropping) return;
 
     const interval = setInterval(() => {
       setBallPosition((prev) => {
-        const newY = prev.y + 2; // Move ball down
-        // Bias the ball's horizontal movement towards higher multiplier slots
-        const bias = Math.random() < 0.8 ? 0.3 : -0.3; // 80% chance to move right
-        const newX = prev.x + (Math.random() - 0.5 + bias) * 4; // Biased random movement
+        const newY = prev.y + 2;
+        const bias = Math.random() < 0.8 ? 0.3 : -0.3;
+        const newX = prev.x + (Math.random() - 0.5 + bias) * 4;
 
         if (newY >= 90) {
           clearInterval(interval);
           setIsDropping(false);
 
-          // Determine the slot the ball landed in
           let slotIndex;
           if (Math.random() < 0.8) {
-            // 80% chance to land on a winning slot
             const winningSlots = slots
               .map((multiplier, index) => ({ multiplier, index }))
               .filter((slot) => slot.multiplier > 1);
             const randomWinningSlot = winningSlots[Math.floor(Math.random() * winningSlots.length)];
             slotIndex = randomWinningSlot.index;
           } else {
-            // 20% chance to land on a losing slot
             const losingSlots = slots
               .map((multiplier, index) => ({ multiplier, index }))
               .filter((slot) => slot.multiplier <= 1);
@@ -82,30 +75,25 @@ export const Game: React.FC<GameProps> = ({
           }
 
           const multiplier = slots[slotIndex];
-
-          // Determine if the player wins or loses
           const result = multiplier > 1 ? "Win" : "Lose";
           setGameResult(result);
 
-          // Show toast message based on result
           if (result === "Win") {
             toast.success(`You won! Multiplier: ${multiplier}x. Winnings: ${betAmount * multiplier} SOL.`);
           } else {
             toast.error(`You lost! Multiplier: ${multiplier}x. Loss: ${betAmount} SOL.`);
           }
 
-          // Fetch updated player balance
           fetchPlayerBalance();
 
-          // Call the determine_result instruction if the player wins
           if (result === "Win" && program && publicKey) {
             const [gameAccountPda] = PublicKey.findProgramAddressSync(
-              [Buffer.from("game_account"), publicKey.toBuffer()],
+              [Buffer.from("global_game_account")],
               program.programId
             );
 
             program.methods
-              .determineResult(new BN(multiplier * 1e9)) // Ensure multiplier is in lamports
+              .determineResult(new BN(multiplier * 1e9))
               .accounts({
                 gameAccount: gameAccountPda,
                 player: publicKey,
@@ -121,7 +109,6 @@ export const Game: React.FC<GameProps> = ({
               });
           }
 
-          // Lock the game after the ball drops (deferred to next event loop tick)
           setTimeout(() => {
             setIsBetPlaced(false);
           }, 0);
@@ -131,7 +118,7 @@ export const Game: React.FC<GameProps> = ({
       });
     }, 30);
 
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, [isDropping, betAmount, fetchPlayerBalance, setIsBetPlaced, program, publicKey]);
 
   const dropBall = () => {
@@ -148,14 +135,12 @@ export const Game: React.FC<GameProps> = ({
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Plinko Game</h2>
-      {/* Plinko Board (Always Visible) */}
       <div style={styles.plinkoBoard} ref={plinkoBoardRef}>
-        {/* Render pegs */}
         {pegs.map((peg, idx) => (
           <div
             key={idx}
             style={{
-              position: "absolute" as const, // Explicitly type as 'Position'
+              position: "absolute",
               top: `${peg.y}%`,
               left: `${peg.x}%`,
               width: "10px",
@@ -165,10 +150,9 @@ export const Game: React.FC<GameProps> = ({
             }}
           />
         ))}
-        {/* Render ball */}
         <div
           style={{
-            position: "absolute" as const, // Explicitly type as 'Position'
+            position: "absolute",
             top: `${ballPosition.y}%`,
             left: `${ballPosition.x}%`,
             width: "20px",
@@ -176,12 +160,11 @@ export const Game: React.FC<GameProps> = ({
             backgroundColor: "red",
             borderRadius: "50%",
             transform: "translate(-50%, -50%)",
-            transition: "top 0.1s linear, left 0.1s linear", // Smooth ball movement
+            transition: "top 0.1s linear, left 0.1s linear",
           }}
         />
       </div>
 
-      {/* Render slots at the bottom */}
       <div style={styles.slotsContainer}>
         {slots.map((slot, idx) => (
           <div key={idx} style={styles.slot}>
@@ -190,16 +173,14 @@ export const Game: React.FC<GameProps> = ({
         ))}
       </div>
 
-      {/* Drop Ball Button (Disabled Until Bet is Placed) */}
       <button
         onClick={dropBall}
-        disabled={!isBetPlaced || isDropping} // Disable if no bet is placed or ball is dropping
+        disabled={!isBetPlaced || isDropping}
         style={styles.dropBallButton}
       >
         {isDropping ? "Dropping Ball..." : "Drop Ball"}
       </button>
 
-      {/* Game Result */}
       {gameResult && (
         <p style={styles.resultText}>
           Result: {gameResult}
