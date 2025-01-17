@@ -17,7 +17,7 @@ interface PlaceBetProps {
   setIsBetPlaced: (isPlaced: boolean) => void;
   program: CasinoPlinkoProgram | null;
   fetchPlayerBalance: () => Promise<void>;
-  initializeGame: () => Promise<void>;
+  initializeGame: () => Promise<void>; // Add this line
 }
 
 export const PlaceBet: React.FC<PlaceBetProps> = ({
@@ -27,7 +27,7 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
   setIsBetPlaced,
   program,
   fetchPlayerBalance,
-  initializeGame,
+  initializeGame, // Add this line
 }) => {
   const wallet = useWallet();
   const [loading, setLoading] = useState<boolean>(false);
@@ -51,8 +51,9 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
     setLoading(true);
 
     try {
+      // Derive the shared game account PDA
       const [gameAccountPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("game_account"), wallet.publicKey.toBuffer()],
+        [Buffer.from("global_game_account")], // Shared game account
         program.programId
       );
 
@@ -63,7 +64,7 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
         gameAccountExists = true;
       } catch (err) {
         console.log("Game account does not exist. Initializing...");
-        await initializeGame();
+        await initializeGame(); // Call initializeGame if the game account doesn't exist
       }
 
       // If the game account exists, reset it before placing a new bet
@@ -83,7 +84,7 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
       const lamports = Math.floor(betAmount * web3.LAMPORTS_PER_SOL);
 
       const tx = await program.methods
-        .placeBet(new BN(lamports)) // Use `place_bet` (snake_case)
+        .placeBet(new BN(lamports))
         .accounts({
           gameAccount: gameAccountPda,
           player: wallet.publicKey,
