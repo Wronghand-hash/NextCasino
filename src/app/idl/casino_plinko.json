@@ -1,5 +1,5 @@
 {
-  "address": "AXZHUNhpX68q7YzdSDeKowaxL2U4KnXUqG3edLhAxKRM",
+  "address": "DX93ZJCkAUMs6gDRnHh7ASzeazyQsb5XmNfhSXkPJTiL",
   "metadata": {
     "name": "casino_plinko",
     "version": "0.1.0",
@@ -7,6 +7,30 @@
     "description": "Created with Anchor"
   },
   "instructions": [
+    {
+      "name": "check_balance",
+      "docs": [
+        "Check the balance of the game account",
+        "Check the balance of the game account"
+      ],
+      "discriminator": [
+        73,
+        83,
+        254,
+        62,
+        189,
+        158,
+        241,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "game_account",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
     {
       "name": "determine_result",
       "docs": [
@@ -308,6 +332,43 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "top_up_game_account",
+      "docs": [
+        "Top up the game account with additional funds"
+      ],
+      "discriminator": [
+        254,
+        119,
+        114,
+        55,
+        10,
+        226,
+        144,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "game_account",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [

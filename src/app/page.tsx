@@ -11,6 +11,8 @@ import { PublicKey } from "@solana/web3.js";
 import { Game } from "./components/Game";
 import { BN, web3 } from "@coral-xyz/anchor";
 import { toast } from "react-toastify";
+import { TopUpGameAccount } from "./components/TopUpGameAccount";
+import { CheckBalance } from "./components/CheckBalance";
 
 const Home = () => {
   const { connected, wallet } = useWallet();
@@ -18,20 +20,32 @@ const Home = () => {
   const [betAmount, setBetAmount] = useState<number>(10);
   const [playerBalance, setPlayerBalance] = useState<number | null>(null);
   const [isBetPlaced, setIsBetPlaced] = useState<boolean>(false); // Allow dropping ball after bet
+  const [gameAccountBalance, setGameAccountBalance] = useState<number | null>(null);
 
   const fetchPlayerBalance = async () => {
     if (!wallet?.adapter?.publicKey || !program) return;
 
-    const [playerAccountPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("player_account"), wallet.adapter.publicKey.toBuffer()],
+    try {
+      const balance = await program.provider.connection.getBalance(wallet.adapter.publicKey);
+      setPlayerBalance(balance / web3.LAMPORTS_PER_SOL); // Convert lamports to SOL
+    } catch (err) {
+      console.error("Failed to fetch player balance:", err);
+    }
+  };
+
+  const fetchGameAccountBalance = async () => {
+    if (!wallet?.adapter?.publicKey || !program) return;
+
+    const [gameAccountPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("game_account"), wallet.adapter.publicKey.toBuffer()],
       program.programId
     );
 
     try {
-      const playerAccount = await program.account.playerAccount.fetch(playerAccountPda);
-      setPlayerBalance(playerAccount.balance.toNumber()); // Ensure `balance` field exists in `PlayerAccount`
+      const balance = await program.provider.connection.getBalance(gameAccountPda);
+      setGameAccountBalance(balance / web3.LAMPORTS_PER_SOL); // Convert lamports to SOL
     } catch (err) {
-      console.error("Failed to fetch player balance:", err);
+      console.error("Failed to fetch game account balance:", err);
     }
   };
 
@@ -68,6 +82,7 @@ const Home = () => {
         .rpc();
 
       toast.success(`Game account initialized! Transaction: ${tx}`);
+      await fetchGameAccountBalance(); // Refresh game account balance
     } catch (err: any) {
       console.error(err);
       toast.error(`Failed to initialize game account: ${err.message}`);
@@ -100,6 +115,15 @@ const Home = () => {
               program={program}
               fetchPlayerBalance={fetchPlayerBalance}
               initializeGame={initializeGame} // Pass the initializeGame function
+            />
+            <TopUpGameAccount
+              program={program}
+              fetchGameAccountBalance={fetchGameAccountBalance}
+            />
+            <CheckBalance
+              program={program}
+              gameAccountBalance={gameAccountBalance}
+              fetchGameAccountBalance={fetchGameAccountBalance}
             />
           </div>
           <div style={styles.rightColumn}>
