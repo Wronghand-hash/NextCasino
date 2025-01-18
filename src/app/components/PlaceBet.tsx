@@ -51,45 +51,35 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
     setLoading(true);
 
     try {
-      // Derive the game account PDA with the correct seed and bump
-      const [gameAccountPda, gameAccountBump] = PublicKey.findProgramAddressSync(
-        [Buffer.from("global_game_account")], // Ensure this matches the seed in the Anchor program
-        program.programId
-      );
+      // Derive the player account PDA
+      const [playerAccountPda, playerAccountBump] =
+        PublicKey.findProgramAddressSync(
+          [Buffer.from("player_account"), wallet.publicKey.toBuffer()],
+          program.programId
+        );
+
+      console.log("Player Account PDA:", playerAccountPda.toBase58());
+      console.log("Player Account Bump:", playerAccountBump);
+
+      // Derive the game account PDA
+      const [gameAccountPda, gameAccountBump] =
+        PublicKey.findProgramAddressSync(
+          [Buffer.from("global_game_account")],
+          program.programId
+        );
 
       console.log("Game Account PDA:", gameAccountPda.toBase58());
       console.log("Game Account Bump:", gameAccountBump);
 
-      // Check if the game account exists
-      let gameAccountExists = false;
-      try {
-        await program.account.gameAccount.fetch(gameAccountPda);
-        gameAccountExists = true;
-      } catch (err) {
-        console.log("Game account does not exist. Initializing...");
-        await initializeGame(); // Call initializeGame if the game account doesn't exist
-      }
-
-      // If the game account exists, reset it before placing a new bet
-      if (gameAccountExists) {
-        await program.methods
-          .resetGame()
-          .accounts({
-            gameAccount: gameAccountPda,
-            player: wallet.publicKey,
-            systemProgram: web3.SystemProgram.programId,
-          })
-          .rpc();
-        console.log("Game account reset successfully.");
-      }
-
       // Convert bet amount to lamports (1 SOL = 1,000,000,000 lamports)
       const lamports = Math.floor(betAmount * web3.LAMPORTS_PER_SOL);
 
+      // Place the bet
       const tx = await program.methods
         .placeBet(new BN(lamports))
         .accounts({
           gameAccount: gameAccountPda,
+          playerAccount: playerAccountPda,
           player: wallet.publicKey,
           systemProgram: web3.SystemProgram.programId,
         })
@@ -105,6 +95,7 @@ export const PlaceBet: React.FC<PlaceBetProps> = ({
       setLoading(false);
     }
   };
+
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Place Your Bet</h2>
