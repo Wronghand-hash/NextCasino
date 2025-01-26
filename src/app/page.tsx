@@ -70,10 +70,9 @@ const Home = () => {
         console.log("Game account does not exist. Initializing...");
       }
 
-      // Initialize the game account with some initial funding (e.g., 0.1 SOL)
-      const initialFunding = 0.1 * web3.LAMPORTS_PER_SOL; // 0.1 SOL in lamports
+      const initialFunding = 0.1 * web3.LAMPORTS_PER_SOL;
       const tx = await program.methods
-        .initializeGame(new BN(initialFunding)) // Pass initial funding as a BN
+        .initializeGame(new BN(initialFunding))
         .accounts({
           gameAccount: gameAccountPda,
           player: wallet.adapter.publicKey,
@@ -82,7 +81,7 @@ const Home = () => {
         .rpc();
 
       toast.success(`Game account initialized! Transaction: ${tx}`);
-      await fetchGameAccountBalance(); // Refresh game account balance
+      await fetchGameAccountBalance();
     } catch (err: any) {
       console.error(err);
       toast.error(`Failed to initialize game account: ${err.message}`);
